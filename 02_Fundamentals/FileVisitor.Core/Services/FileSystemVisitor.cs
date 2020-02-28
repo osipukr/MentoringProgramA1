@@ -39,6 +39,11 @@ namespace FileVisitor.Core.Services
         }
 
         /// <summary>
+        ///     Gets visitor options.
+        /// </summary>
+        public FileSystemVisitorOptions Options => _options;
+
+        /// <summary>
         ///     Gets a list of found files and directories.
         /// </summary>
         public IEnumerable<FileSystemInfo> Visit()

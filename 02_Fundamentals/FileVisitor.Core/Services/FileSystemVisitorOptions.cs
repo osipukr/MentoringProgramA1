@@ -8,6 +8,13 @@ namespace FileVisitor.Core.Services
     /// </summary>
     public sealed class FileSystemVisitorOptions
     {
+        public FileSystemVisitorOptions()
+        {
+            SearchFilter = null;
+            SearchPattern = "*.*";
+            SearchOption = SearchOption.AllDirectories;
+        }
+
         /// <summary>
         ///     Filter by which files will be filtered.
         /// </summary>
