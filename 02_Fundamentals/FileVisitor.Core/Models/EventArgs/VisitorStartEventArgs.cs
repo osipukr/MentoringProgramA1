@@ -1,6 +1,9 @@
 ﻿namespace FileVisitor.Core.Models.EventArgs
 {
-    public class VisitorStartEventArgs : System.EventArgs
+    /// <summary>
+    /// 
+    /// </summary>
+    public sealed class VisitorStartEventArgs : System.EventArgs
     {
     }
 }
