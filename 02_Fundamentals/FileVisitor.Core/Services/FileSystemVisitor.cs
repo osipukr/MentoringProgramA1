@@ -50,7 +50,7 @@ namespace FileVisitor.Core.Services
         {
             if (!_startDirectory.Exists)
             {
-                throw new DirectoryNotFoundException($"Directory {_startDirectory} not found.");
+                throw new DirectoryNotFoundException();
             }
 
             OnEvent(Started, new VisitorStartEventArgs());
@@ -83,8 +83,7 @@ namespace FileVisitor.Core.Services
                 {
                     currentAction = ProcessItemFinded(fileInfo, options.SearchFilter, FileFinded, FilteredFileFinded);
                 }
-
-                if (file is DirectoryInfo directoryInfo)
+                else if (file is DirectoryInfo directoryInfo)
                 {
                     currentAction = ProcessItemFinded(directoryInfo, options.SearchFilter, DirectoryFinded, FilteredDirectoryFinded);
                 }

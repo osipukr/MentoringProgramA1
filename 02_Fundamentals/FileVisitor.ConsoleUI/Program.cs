@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FileVisitor.ConsoleUI.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FileVisitor.ConsoleUI
 {
-    public class Program
+    public sealed class Program
     {
         private static void Main()
         {

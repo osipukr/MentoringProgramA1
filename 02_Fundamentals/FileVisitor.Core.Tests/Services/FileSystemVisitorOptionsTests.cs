@@ -13,7 +13,7 @@ namespace FileVisitor.Core.Tests.Services
             var options = new FileSystemVisitorOptions();
 
             // Assert
-            Assert.Null(options.SearchFilter);
+            Assert.Equal(null, options.SearchFilter);
             Assert.Equal("*.*", options.SearchPattern);
             Assert.Equal(SearchOption.AllDirectories, options.SearchOption);
         }

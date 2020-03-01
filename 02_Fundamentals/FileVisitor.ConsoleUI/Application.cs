@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Threading;
+using FileVisitor.ConsoleUI.Resources.Resources;
+using FileVisitor.ConsoleUI.Settings;
 using FileVisitor.Core.Interfaces;
 using FileVisitor.Core.Models.EventArgs;
 using FileVisitor.Core.Services;
@@ -10,75 +13,84 @@ namespace FileVisitor.ConsoleUI
     public class Application
     {
         private readonly IFileSystemVisitor _visitor;
+        private readonly AppSettings _appSettings;
+        private readonly UserSettings _userSettings;
 
-        public Application()
+        public Application(AppSettings appSettings, UserSettings userSettings)
         {
-            var path = Environment.CurrentDirectory;
-            var visitorOptions = new FileSystemVisitorOptions
+            _appSettings = appSettings;
+            _userSettings = userSettings;
+
+            _visitor = new FileSystemVisitor(_userSettings.DirectoryPath, new FileSystemVisitorOptions
             {
-                //SearchFilter = _ => true,
                 SearchFilter = file => file.Name.Contains("Core"),
-                SearchPattern = "*.*",
-                SearchOption = SearchOption.AllDirectories
-            };
+                SearchPattern = _userSettings.SearchPattern,
+                SearchOption = _userSettings.SearchOption
+            });
 
-            _visitor = new FileSystemVisitor(path, visitorOptions);
+            _visitor.Started += OnStarted_Handler;
+            _visitor.Finished += OnFinished_Handler;
+            _visitor.FileFinded += OnFileFinded_Handler;
+            _visitor.DirectoryFinded += OnDirectoryFinded_Handler;
+            _visitor.FilteredFileFinded += OnFilteredFileFinded_Handler;
+            _visitor.FilteredDirectoryFinded += OnFilteredDirectoryFinded_Handler;
 
-            _visitor.Started += StartedSearching_Handler;
-            _visitor.Finished += FinishedSearching_Handler;
-            _visitor.FileFinded += FileFinded_Handler;
-            _visitor.DirectoryFinded += DirectoryFinded_Handler;
-            _visitor.FilteredFileFinded += FilteredFileFinded_Handler;
-            _visitor.FilteredDirectoryFinded += FilteredDirectoryFinded_Handler;
+            CultureInfo.CurrentCulture = _appSettings.Language;
+            CultureInfo.CurrentUICulture = _appSettings.Language;
         }
 
         public void Run()
         {
+            Console.WriteLine(Resource.Application_Run_File_Visitor___console_application_, DateTime.UtcNow);
+
             var files = _visitor.Visit();
 
             foreach (var file in files)
             {
-                Console.WriteLine(file.Name);
-                Console.WriteLine();
+                Console.Write(file.Name);
             }
         }
 
-        private void StartedSearching_Handler(object sender, VisitorStartEventArgs e)
+        private void OnStarted_Handler(object sender, VisitorStartEventArgs e)
         {
-            Console.WriteLine("[SEARCH HAS STARTED]");
+            Console.WriteLine();
+            Console.WriteLine(Resource.Application_OnStarted_Handler__SEARCH_HAS_STARTED_);
         }
 
-        private void FinishedSearching_Handler(object sender, VisitorFinishEventArgs e)
+        private void OnFinished_Handler(object sender, VisitorFinishEventArgs e)
         {
-            Console.WriteLine("[SEARCH HAS FINISHED]");
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine(Resource.Application_OnFinished_Handler__SEARCH_HAS_FINISHED_);
         }
 
-        private void FileFinded_Handler(object sender, VisitorItemFindedEventArgs<FileInfo> e)
+        private void OnFileFinded_Handler(object sender, VisitorItemFindedEventArgs<FileInfo> e)
         {
             Thread.Sleep(50);
-            Console.WriteLine("[FILE FINDED]");
+            Console.WriteLine();
+            Console.Write(Resource.Application_OnFileFinded_Handler__FILE_FINDED__);
         }
 
-        private void DirectoryFinded_Handler(object sender, VisitorItemFindedEventArgs<DirectoryInfo> e)
+        private void OnDirectoryFinded_Handler(object sender, VisitorItemFindedEventArgs<DirectoryInfo> e)
         {
             Thread.Sleep(50);
-            Console.WriteLine("[DIRECTORY FINDED]");
+            Console.WriteLine();
+            Console.Write(Resource.Application_OnDirectoryFinded_Handler__DIRECTORY_FINDED__);
         }
 
-        private void FilteredFileFinded_Handler(object sender, VisitorItemFindedEventArgs<FileInfo> e)
+        private void OnFilteredFileFinded_Handler(object sender, VisitorItemFindedEventArgs<FileInfo> e)
         {
-            Console.Write("[FILTERED] ");
+            Console.Write(Resource.Application_OnFilteredFileFinded_Handler__FILTERED__);
 
             if (e.FindedItem.Name.EndsWith("Core.dll"))
             {
-                // uncomment this line
                 //e.ActionType = ActionTypeEnum.SkipElement;
             }
         }
 
-        private void FilteredDirectoryFinded_Handler(object sender, VisitorItemFindedEventArgs<DirectoryInfo> e)
+        private void OnFilteredDirectoryFinded_Handler(object sender, VisitorItemFindedEventArgs<DirectoryInfo> e)
         {
-            Console.Write("[FILTERED] ");
+            Console.Write(Resource.Application_OnFilteredDirectoryFinded_Handler__FILTERED__);
         }
     }
 }
