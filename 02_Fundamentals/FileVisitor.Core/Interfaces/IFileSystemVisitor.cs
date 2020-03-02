@@ -10,7 +10,12 @@ namespace FileVisitor.Core.Interfaces
         /// <summary>
         ///     Gets a list of visited files.
         /// </summary>
-        IEnumerable<FileSystemInfo> Visit();
+        IEnumerable<FileSystemInfo> Visit(string directoryPath);
+
+        /// <summary>
+        ///     Gets a file system visitor options.
+        /// </summary>
+        IFileSystemVisitorOptions Options { get; }
 
         /// <summary>
         ///     Event that is triggered when the search starts.

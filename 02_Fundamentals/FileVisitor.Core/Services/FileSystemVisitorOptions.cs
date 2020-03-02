@@ -1,27 +1,18 @@
 ﻿using System;
 using System.IO;
+using FileVisitor.Core.Interfaces;
 
 namespace FileVisitor.Core.Services
 {
     /// <summary>
     ///     Represent of file system visitor options.
     /// </summary>
-    public sealed class FileSystemVisitorOptions
+    public sealed class FileSystemVisitorOptions : IFileSystemVisitorOptions
     {
-        /// <summary>
-        ///     Filter by which files will be filtered.
-        /// </summary>
-        public Func<FileSystemInfo, bool> SearchFilter { get; set; }
+        public Func<FileSystemInfo, bool> SearchFilter { get; set; } = null;
 
-        /// <summary>
-        ///     The search string to match against the names of directories.
-        /// </summary>
         public string SearchPattern { get; set; } = "*.*";
 
-        /// <summary>
-        ///     The specifies whether the search operation should
-        ///     include only the current directory or all subdirectories.
-        /// </summary>
         public SearchOption SearchOption { get; set; } = SearchOption.AllDirectories;
     }
 }

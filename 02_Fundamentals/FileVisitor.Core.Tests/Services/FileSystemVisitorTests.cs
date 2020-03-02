@@ -1,77 +1,61 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using FileVisitor.Core.Interfaces;
 using FileVisitor.Core.Models;
 using FileVisitor.Core.Services;
+using Moq;
 using Xunit;
 
 namespace FileVisitor.Core.Tests.Services
 {
     public class FileSystemVisitorTests
     {
-        private const string RESOURCES_DIRECTORY_NAME = "TestResources";
-
-        private static readonly string DirectoryPath = Path.Combine(Environment.CurrentDirectory, RESOURCES_DIRECTORY_NAME);
+        private static readonly string DirectoryPath = Path.Combine(Environment.CurrentDirectory, "TestResources");
 
         [Fact]
-        public void Constructor_ShouldThrowArgumentNullException_IfPathIsNull()
+        public void Constructor_ShouldThrowArgumentNullException_IfOptionsIsNull()
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() => new FileSystemVisitor(null));
         }
 
         [Fact]
-        public void Constructor_ShouldThrowArgumentNullException_IfParametersIsNull()
+        public void Options_ShouldReturnNotNullOptions_IfOptionIsSet()
         {
-            // Act & Assert
-            Assert.Throws<ArgumentNullException>(() => new FileSystemVisitor(null, null));
+            // Act
+            var options = new FileSystemVisitor(GetMockedOptions()).Options;
+
+            // Assert
+            Assert.NotNull(options);
         }
 
         [Fact]
-        public void Options_ShouldReturnCurrentOptions_IfOptionIsSet()
+        public void Visit_ShouldReturnAllItems_IfFilterIsNull()
         {
             // Arrange
-            var options = new FileSystemVisitorOptions
-            {
-                SearchFilter = null,
-                SearchPattern = "SEARCH_PATTERN",
-                SearchOption = SearchOption.TopDirectoryOnly
-            };
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+            var directoryPath = DirectoryPath;
 
             // Act
-            var visitor = new FileSystemVisitor(DirectoryPath, options);
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
-            Assert.Equal(options, visitor.Options);
+            Assert.Equal(6, items.Length);
         }
 
         [Fact]
-        public void Visit_ShouldReturnAllFiles_IfFilterIsEmpty()
+        public void Visit_ShouldReturnItemsByFilter_IfFilterIsNotNull()
         {
             // Arrange
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions());
+            var visitor = new FileSystemVisitor(GetMockedOptions(filter: file => file.Extension == ".json"));
+            var directoryPath = DirectoryPath;
 
             // Act
-            var files = visitor.Visit().ToArray();
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
-            Assert.Equal(6, files.Length);
-        }
-
-        [Fact]
-        public void Visit_ShouldReturnFilesByFilter_IfFilterIsNotEmpty()
-        {
-            // Arrange
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions
-            {
-                SearchFilter = file => file.Extension == ".json"
-            });
-
-            // Act
-            var files = visitor.Visit().ToArray();
-
-            // Assert
-            Assert.Equal(1, files.Length);
+            Assert.Equal(1, items.Length);
         }
 
         [Fact]
@@ -79,15 +63,17 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions());
-
-            visitor.FileFinded += (s, e) => ++delegateCallCount;
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+            var directoryPath = DirectoryPath;
 
             // Act
-            var files = visitor.Visit().ToArray();
+            visitor.FileFinded += (s, e) => ++delegateCallCount;
+
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(4, delegateCallCount);
+            Assert.Equal(6, items.Length);
         }
 
         [Fact]
@@ -95,15 +81,17 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions());
-
-            visitor.DirectoryFinded += (s, e) => ++delegateCallCount;
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+            var directoryPath = DirectoryPath;
 
             // Act
-            var files = visitor.Visit().ToArray();
+            visitor.DirectoryFinded += (s, e) => ++delegateCallCount;
+
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(2, delegateCallCount);
+            Assert.Equal(6, items.Length);
         }
 
         [Fact]
@@ -111,18 +99,17 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions
-            {
-                SearchFilter = file => file.Extension.Equals(".txt")
-            });
-
-            visitor.FilteredFileFinded += (s, e) => ++delegateCallCount;
+            var visitor = new FileSystemVisitor(GetMockedOptions(filter: file => file.Extension.Equals(".txt")));
+            var directoryPath = DirectoryPath;
 
             // Act
-            var files = visitor.Visit().ToArray();
+            visitor.FilteredFileFinded += (s, e) => ++delegateCallCount;
+
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(2, delegateCallCount);
+            Assert.Equal(2, items.Length);
         }
 
         [Fact]
@@ -130,18 +117,17 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions
-            {
-                SearchFilter = file => file.Name.EndsWith("Folder")
-            });
-
-            visitor.FilteredDirectoryFinded += (s, e) => ++delegateCallCount;
+            var visitor = new FileSystemVisitor(GetMockedOptions(filter: file => file.Name.EndsWith("Folder")));
+            var directoryPath = DirectoryPath;
 
             // Act
-            var files = visitor.Visit().ToArray();
+            visitor.FilteredDirectoryFinded += (s, e) => ++delegateCallCount;
+
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(1, delegateCallCount);
+            Assert.Equal(1, items.Length);
         }
 
         [Fact]
@@ -149,8 +135,10 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions());
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+            var directoryPath = DirectoryPath;
 
+            // Act
             visitor.DirectoryFinded += (s, e) =>
             {
                 ++delegateCallCount;
@@ -158,12 +146,11 @@ namespace FileVisitor.Core.Tests.Services
                 e.ActionType = ActionTypeEnum.ContinueSearch;
             };
 
-            // Act
-            var files = visitor.Visit().ToArray();
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(2, delegateCallCount);
-            Assert.Equal(6, files.Length);
+            Assert.Equal(6, items.Length);
         }
 
         [Fact]
@@ -171,8 +158,10 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions());
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+            var directoryPath = DirectoryPath;
 
+            // Act
             visitor.FileFinded += (s, e) =>
             {
                 ++delegateCallCount;
@@ -183,12 +172,11 @@ namespace FileVisitor.Core.Tests.Services
                 }
             };
 
-            // Act
-            var files = visitor.Visit().ToArray();
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(4, delegateCallCount);
-            Assert.Equal(5, files.Length);
+            Assert.Equal(5, items.Length);
         }
 
         [Fact]
@@ -196,8 +184,10 @@ namespace FileVisitor.Core.Tests.Services
         {
             // Arrange
             var delegateCallCount = 0;
-            var visitor = new FileSystemVisitor(DirectoryPath, new FileSystemVisitorOptions());
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+            var directoryPath = DirectoryPath;
 
+            // Act
             visitor.FileFinded += (s, e) =>
             {
                 ++delegateCallCount;
@@ -208,12 +198,25 @@ namespace FileVisitor.Core.Tests.Services
                 }
             };
 
-            // Act
-            var files = visitor.Visit().ToArray();
+            var items = visitor.Visit(directoryPath).ToArray();
 
             // Assert
             Assert.Equal(2, delegateCallCount);
-            Assert.Equal(3, files.Length);
+            Assert.Equal(3, items.Length);
+        }
+
+        private static IFileSystemVisitorOptions GetMockedOptions(
+            Func<FileSystemInfo, bool> filter = null,
+            string searchPattern = "*.*",
+            SearchOption searchOption = SearchOption.AllDirectories)
+        {
+            var optionsMock = new Mock<IFileSystemVisitorOptions>();
+
+            optionsMock.Setup(x => x.SearchFilter).Returns(filter);
+            optionsMock.Setup(x => x.SearchPattern).Returns(searchPattern);
+            optionsMock.Setup(x => x.SearchOption).Returns(searchOption);
+
+            return optionsMock.Object;
         }
     }
 }

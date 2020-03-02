@@ -1,5 +1,7 @@
 ﻿using System.IO;
 using FileVisitor.ConsoleUI.Settings;
+using FileVisitor.Core.Interfaces;
+using FileVisitor.Core.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +22,19 @@ namespace FileVisitor.ConsoleUI.Extensions
             services.AddSingleton(appSettings);
             services.AddSingleton(userSettings);
 
+            services.AddScoped<IFileSystemVisitorOptions, FileSystemVisitorOptions>(_ =>
+            {
+                var options = new FileSystemVisitorOptions
+                {
+                    SearchFilter = info => info.Name.Contains("Core"),
+                    SearchPattern = userSettings.SearchPattern,
+                    SearchOption = userSettings.SearchOption
+                };
+
+                return options;
+            });
+
+            services.AddScoped<IFileSystemVisitor, FileSystemVisitor>();
             services.AddScoped<Application>();
 
             return services;

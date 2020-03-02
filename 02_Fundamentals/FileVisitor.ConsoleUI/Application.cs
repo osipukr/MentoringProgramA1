@@ -6,27 +6,20 @@ using FileVisitor.ConsoleUI.Resources.Resources;
 using FileVisitor.ConsoleUI.Settings;
 using FileVisitor.Core.Interfaces;
 using FileVisitor.Core.Models.EventArgs;
-using FileVisitor.Core.Services;
 
 namespace FileVisitor.ConsoleUI
 {
-    public class Application
+    public class Application : IDisposable
     {
         private readonly IFileSystemVisitor _visitor;
         private readonly AppSettings _appSettings;
         private readonly UserSettings _userSettings;
 
-        public Application(AppSettings appSettings, UserSettings userSettings)
+        public Application(IFileSystemVisitor visitor, AppSettings appSettings, UserSettings userSettings)
         {
+            _visitor = visitor;
             _appSettings = appSettings;
             _userSettings = userSettings;
-
-            _visitor = new FileSystemVisitor(_userSettings.DirectoryPath, new FileSystemVisitorOptions
-            {
-                SearchFilter = file => file.Name.Contains("Core"),
-                SearchPattern = _userSettings.SearchPattern,
-                SearchOption = _userSettings.SearchOption
-            });
 
             _visitor.Started += OnStarted_Handler;
             _visitor.Finished += OnFinished_Handler;
@@ -43,12 +36,18 @@ namespace FileVisitor.ConsoleUI
         {
             Console.WriteLine(Resource.Application_Run_File_Visitor___console_application_, DateTime.UtcNow);
 
-            var files = _visitor.Visit();
+            var files = _visitor.Visit(_userSettings.DirectoryPath);
 
             foreach (var file in files)
             {
                 Console.Write(file.Name);
             }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         private void OnStarted_Handler(object sender, VisitorStartEventArgs e)
@@ -91,6 +90,31 @@ namespace FileVisitor.ConsoleUI
         private void OnFilteredDirectoryFinded_Handler(object sender, VisitorItemFindedEventArgs<DirectoryInfo> e)
         {
             Console.Write(Resource.Application_OnFilteredDirectoryFinded_Handler__FILTERED__);
+        }
+
+        private bool _isDisposed;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    _visitor.Started -= OnStarted_Handler;
+                    _visitor.Finished -= OnFinished_Handler;
+                    _visitor.FileFinded -= OnFileFinded_Handler;
+                    _visitor.DirectoryFinded -= OnDirectoryFinded_Handler;
+                    _visitor.FilteredFileFinded -= OnFilteredFileFinded_Handler;
+                    _visitor.FilteredDirectoryFinded -= OnFilteredDirectoryFinded_Handler;
+                }
+
+                _isDisposed = true;
+            }
+        }
+
+        ~Application()
+        {
+            Dispose(false);
         }
     }
 }

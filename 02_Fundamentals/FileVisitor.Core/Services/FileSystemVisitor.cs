@@ -12,50 +12,37 @@ namespace FileVisitor.Core.Services
     /// </summary>
     public sealed class FileSystemVisitor : IFileSystemVisitor
     {
-        private readonly DirectoryInfo _startDirectory;
-        private readonly FileSystemVisitorOptions _options;
+        private readonly IFileSystemVisitorOptions _options;
 
         /// <summary>
         ///     Ctor.
         /// </summary>
-        /// <param name="path"></param>
-        public FileSystemVisitor(string path) : this(path, new FileSystemVisitorOptions())
-        {
-        }
-
-        /// <summary>
-        ///     Ctor.
-        /// </summary>
-        /// <param name="path"></param>
         /// <param name="options"></param>
-        public FileSystemVisitor(string path, FileSystemVisitorOptions options) : this(new DirectoryInfo(path), options)
+        public FileSystemVisitor(IFileSystemVisitorOptions options)
         {
-        }
-
-        private FileSystemVisitor(DirectoryInfo startDirectory, FileSystemVisitorOptions options)
-        {
-            _startDirectory = startDirectory ?? throw new ArgumentNullException(nameof(startDirectory));
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         /// <summary>
         ///     Gets visitor options.
         /// </summary>
-        public FileSystemVisitorOptions Options => _options;
+        public IFileSystemVisitorOptions Options => _options;
 
         /// <summary>
         ///     Gets a list of found files and directories.
         /// </summary>
-        public IEnumerable<FileSystemInfo> Visit()
+        public IEnumerable<FileSystemInfo> Visit(string directoryPath)
         {
-            if (!_startDirectory.Exists)
+            var startDirectory = new DirectoryInfo(directoryPath);
+
+            if (!startDirectory.Exists)
             {
                 throw new DirectoryNotFoundException();
             }
 
             OnEvent(Started, new VisitorStartEventArgs());
 
-            foreach (var file in BypassFileSystem(_startDirectory, _options, ActionTypeEnum.ContinueSearch))
+            foreach (var file in BypassFileSystem(startDirectory, _options, ActionTypeEnum.ContinueSearch))
             {
                 yield return file;
             }
@@ -72,7 +59,7 @@ namespace FileVisitor.Core.Services
 
         private IEnumerable<FileSystemInfo> BypassFileSystem(
             DirectoryInfo directory,
-            FileSystemVisitorOptions options,
+            IFileSystemVisitorOptions options,
             ActionTypeEnum currentAction)
         {
             var files = directory.EnumerateFileSystemInfos(options.SearchPattern, options.SearchOption);
