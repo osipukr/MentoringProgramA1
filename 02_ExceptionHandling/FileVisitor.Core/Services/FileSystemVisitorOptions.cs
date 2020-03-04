@@ -7,7 +7,7 @@ namespace FileVisitor.Core.Services
     /// <summary>
     ///     Represent of file system visitor options.
     /// </summary>
-    public sealed class FileSystemVisitorOptions : IFileSystemVisitorOptions
+    public class FileSystemVisitorOptions : IFileSystemVisitorOptions
     {
         public Func<FileSystemInfo, bool> SearchFilter { get; set; } = null;
 

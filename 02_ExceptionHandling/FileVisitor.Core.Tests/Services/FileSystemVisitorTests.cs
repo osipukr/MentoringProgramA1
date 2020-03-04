@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using FileVisitor.Core.Exceptions;
 using FileVisitor.Core.Interfaces;
 using FileVisitor.Core.Models;
 using FileVisitor.Core.Services;
@@ -20,14 +21,52 @@ namespace FileVisitor.Core.Tests.Services
             Assert.Throws<ArgumentNullException>(() => new FileSystemVisitor(null));
         }
 
+        [Theory]
+        [InlineData(null, "", (SearchOption)1)]
+        [InlineData(null, "*.*", (SearchOption)(-1))]
+        public void Constructor_ShouldThrowInvalidVisitorOptionException_IfOptionsIsInvalid(
+            Func<FileSystemInfo, bool> filter,
+            string searchPattern,
+            SearchOption searchOption)
+        {
+            // Arrange
+            var options = GetMockedOptions(filter, searchPattern, searchOption);
+
+            // Act & Assert
+            Assert.Throws<InvalidVisitorOptionException>(() => new FileSystemVisitor(options));
+        }
+
         [Fact]
         public void Options_ShouldReturnNotNullOptions_IfOptionIsSet()
         {
+            // Arrange
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+
             // Act
-            var options = new FileSystemVisitor(GetMockedOptions()).Options;
+            var options = visitor.Options;
 
             // Assert
             Assert.NotNull(options);
+        }
+
+        [Fact]
+        public void Visit_ShouldThrowArgumentNullException_IfPathIsNull()
+        {
+            // Arrange
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() => visitor.Visit(null).ToArray());
+        }
+
+        [Fact]
+        public void Visit_ShouldThrowDirectoryNotFoundException_IfPathIsInvalid()
+        {
+            // Arrange
+            var visitor = new FileSystemVisitor(GetMockedOptions());
+
+            // Act & Assert
+            Assert.Throws<DirectoryNotFoundException>(() => visitor.Visit("invalid-path").ToArray());
         }
 
         [Fact]

@@ -6,7 +6,7 @@ namespace FileVisitor.Core.Models.EventArgs
     /// 
     /// </summary>
     /// <typeparam name="TItem"></typeparam>
-    public sealed class VisitorItemFindedEventArgs<TItem> : System.EventArgs where TItem : FileSystemInfo
+    public class VisitorItemFindedEventArgs<TItem> : System.EventArgs where TItem : FileSystemInfo
     {
         /// <summary>
         ///     The element is found.

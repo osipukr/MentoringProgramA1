@@ -9,15 +9,23 @@ using FileVisitor.Core.Models.EventArgs;
 
 namespace FileVisitor.ConsoleUI
 {
-    public class Application : IDisposable
+    public class Application
     {
         private readonly IFileSystemVisitor _visitor;
+        private readonly ILogger _logger;
+
         private readonly AppSettings _appSettings;
         private readonly UserSettings _userSettings;
 
-        public Application(IFileSystemVisitor visitor, AppSettings appSettings, UserSettings userSettings)
+        public Application(
+            IFileSystemVisitor visitor,
+            ILogger logger,
+            AppSettings appSettings,
+            UserSettings userSettings)
         {
             _visitor = visitor;
+            _logger = logger;
+
             _appSettings = appSettings;
             _userSettings = userSettings;
 
@@ -36,18 +44,24 @@ namespace FileVisitor.ConsoleUI
         {
             Console.WriteLine(Resource.Application_Run_File_Visitor___console_application_, DateTime.UtcNow);
 
+            try
+            {
+                RunInternal();
+            }
+            catch (Exception e)
+            {
+                _logger.LogMessage(e.ToString());
+            }
+        }
+
+        private void RunInternal()
+        {
             var files = _visitor.Visit(_userSettings.DirectoryPath);
 
             foreach (var file in files)
             {
                 Console.Write(file.Name);
             }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         private void OnStarted_Handler(object sender, VisitorStartEventArgs e)
@@ -90,31 +104,6 @@ namespace FileVisitor.ConsoleUI
         private void OnFilteredDirectoryFinded_Handler(object sender, VisitorItemFindedEventArgs<DirectoryInfo> e)
         {
             Console.Write(Resource.Application_OnFilteredDirectoryFinded_Handler__FILTERED__);
-        }
-
-        private bool _isDisposed;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_isDisposed)
-            {
-                if (disposing)
-                {
-                    _visitor.Started -= OnStarted_Handler;
-                    _visitor.Finished -= OnFinished_Handler;
-                    _visitor.FileFinded -= OnFileFinded_Handler;
-                    _visitor.DirectoryFinded -= OnDirectoryFinded_Handler;
-                    _visitor.FilteredFileFinded -= OnFilteredFileFinded_Handler;
-                    _visitor.FilteredDirectoryFinded -= OnFilteredDirectoryFinded_Handler;
-                }
-
-                _isDisposed = true;
-            }
-        }
-
-        ~Application()
-        {
-            Dispose(false);
         }
     }
 }

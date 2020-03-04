@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public sealed class VisitorFinishEventArgs : System.EventArgs
+    public class VisitorFinishEventArgs : System.EventArgs
     {
     }
 }

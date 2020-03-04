@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using FileVisitor.Core.Exceptions;
 using FileVisitor.Core.Interfaces;
 using FileVisitor.Core.Models;
 using FileVisitor.Core.Models.EventArgs;
@@ -10,7 +11,7 @@ namespace FileVisitor.Core.Services
     /// <summary>
     ///     Represent of file system visitor interface.
     /// </summary>
-    public sealed class FileSystemVisitor : IFileSystemVisitor
+    public class FileSystemVisitor : IFileSystemVisitor
     {
         private readonly IFileSystemVisitorOptions _options;
 
@@ -21,6 +22,12 @@ namespace FileVisitor.Core.Services
         public FileSystemVisitor(IFileSystemVisitorOptions options)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+
+            if (string.IsNullOrWhiteSpace(options.SearchPattern) ||
+                !Enum.IsDefined(typeof(SearchOption), options.SearchOption))
+            {
+                throw new InvalidVisitorOptionException(options);
+            }
         }
 
         /// <summary>
@@ -33,6 +40,11 @@ namespace FileVisitor.Core.Services
         /// </summary>
         public IEnumerable<FileSystemInfo> Visit(string directoryPath)
         {
+            if (directoryPath == null)
+            {
+                throw new ArgumentNullException(nameof(directoryPath));
+            }
+
             var startDirectory = new DirectoryInfo(directoryPath);
 
             if (!startDirectory.Exists)
@@ -66,6 +78,11 @@ namespace FileVisitor.Core.Services
 
             foreach (var file in files)
             {
+                if (!file.Exists)
+                {
+                    continue;
+                }
+
                 if (file is FileInfo fileInfo)
                 {
                     currentAction = ProcessItemFinded(fileInfo, options.SearchFilter, FileFinded, FilteredFileFinded);

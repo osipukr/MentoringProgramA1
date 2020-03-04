@@ -34,6 +34,7 @@ namespace FileVisitor.ConsoleUI.Extensions
                 return options;
             });
 
+            services.AddScoped<ILogger, ConsoleLogger>();
             services.AddScoped<IFileSystemVisitor, FileSystemVisitor>();
             services.AddScoped<Application>();
 
