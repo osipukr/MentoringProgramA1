@@ -138,4 +138,10 @@
   <data name="Application_Run_File_Visitor___console_application_" xml:space="preserve">
     <value>File Visitor - console application - {0}</value>
   </data>
+  <data name="Application_Run_Handled_custom_exception____0_" xml:space="preserve">
+    <value>Handled custom exception - {0}</value>
+  </data>
+  <data name="Application_Run_Unhandled_exception____0_" xml:space="preserve">
+    <value>Unhandled exception - {0}</value>
+  </data>
 </root>

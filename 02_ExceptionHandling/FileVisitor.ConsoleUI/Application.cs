@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using FileVisitor.ConsoleUI.Resources.Resources;
 using FileVisitor.ConsoleUI.Settings;
+using FileVisitor.Core.Exceptions;
 using FileVisitor.Core.Interfaces;
 using FileVisitor.Core.Models.EventArgs;
 
@@ -48,9 +49,13 @@ namespace FileVisitor.ConsoleUI
             {
                 RunInternal();
             }
+            catch (InvalidVisitorOptionException e)
+            {
+                _logger.LogMessage(string.Format(Resource.Application_Run_Handled_custom_exception____0_, e));
+            }
             catch (Exception e)
             {
-                _logger.LogMessage(e.ToString());
+                _logger.LogMessage(string.Format(Resource.Application_Run_Unhandled_exception____0_, e));
             }
         }
 
