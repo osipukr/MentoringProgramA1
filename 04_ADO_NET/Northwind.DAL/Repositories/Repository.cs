@@ -31,7 +31,7 @@ namespace Northwind.DAL.Repositories
 
             var transactionScope = connection.BeginTransaction();
 
-            using var command = _databaseHandler.CreateCommand(commandText, CommandType.Text, connection);
+            using var command = _databaseHandler.CreateCommand(commandText, CommandType.Text, connection, transactionScope);
 
             command.AddParameters(parameters);
 
@@ -48,6 +48,8 @@ namespace Northwind.DAL.Repositories
             {
                 connection.Close();
             }
+
+            _databaseHandler.CloseConnection(connection);
         }
 
         protected IEnumerable<TEntity> ExecuteReaderCollectionInternal(string commandText, IEnumerable<IDbDataParameter> parameters = null)
@@ -68,12 +70,22 @@ namespace Northwind.DAL.Repositories
 
             var reader = command.ExecuteReader();
 
-            while (reader.Read())
+            List<T> entities = null;
+
+            if (reader.Read())
             {
-                yield return _dataMapper.Map<T>(reader);
+                entities = new List<T>();
+
+                do
+                {
+                    entities.Add(_dataMapper.Map<T>(reader));
+
+                } while (reader.Read());
             }
 
             _databaseHandler.CloseConnection(connection);
+
+            return entities;
         }
 
         protected TEntity ExecuteReaderInternal(string commandText, IEnumerable<IDbDataParameter> parameters = null)
@@ -92,17 +104,23 @@ namespace Northwind.DAL.Repositories
 
             command.AddParameters(parameters);
 
-            var reader = command.ExecuteReader();
-            var entity = _dataMapper.Map<T>(reader);
+            using var reader = command.ExecuteReader();
+
+            var entity = default(T);
+
+            if (reader.Read())
+            {
+                entity = _dataMapper.Map<T>(reader);
+            }
 
             _databaseHandler.CloseConnection(connection);
 
             return entity;
         }
 
-        protected IDbDataParameter CreateParameterInternal(string name, object value, DbType dbType)
+        protected IDbDataParameter CreateParameterInternal<TValue>(string name, TValue value)
         {
-            return _databaseHandler.CreateParameter(name, value, dbType, ParameterDirection.Input);
+            return _databaseHandler.CreateParameter(name, value);
         }
     }
 }

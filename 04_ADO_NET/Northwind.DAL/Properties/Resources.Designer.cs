@@ -61,6 +61,51 @@ namespace Northwind.DAL.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid order..
+        /// </summary>
+        public static string OrderRepository_Add_Invalid_order_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_Add_Invalid_order_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid order id..
+        /// </summary>
+        public static string OrderRepository_CustOrderDetail_Invalid_order_id_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_CustOrderDetail_Invalid_order_id_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The customer orders details not found..
+        /// </summary>
+        public static string OrderRepository_CustOrderDetail_The_customer_orders_details_not_found_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_CustOrderDetail_The_customer_orders_details_not_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid customer id..
+        /// </summary>
+        public static string OrderRepository_CustOrderHist_Invalid_customer_id_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_CustOrderHist_Invalid_customer_id_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The customer order hist not found..
+        /// </summary>
+        public static string OrderRepository_CustOrderHist_The_customer_order_hist_not_found_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_CustOrderHist_The_customer_order_hist_not_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Orders with Completed status cannot be deleted.
         /// </summary>
         public static string OrderRepository_Delete_Orders_with_Completed_status_cannot_be_deleted {
@@ -70,11 +115,29 @@ namespace Northwind.DAL.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The order with id = {0} not found..
+        /// </summary>
+        public static string OrderRepository_Get_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_Get_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid order id..
         /// </summary>
         public static string OrderRepository_Get_Invalid_order_id_ {
             get {
                 return ResourceManager.GetString("OrderRepository_Get_Invalid_order_id_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The orders not found..
+        /// </summary>
+        public static string OrderRepository_GetAll_The_orders_not_found_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_GetAll_The_orders_not_found_", resourceCulture);
             }
         }
         
@@ -94,6 +157,15 @@ namespace Northwind.DAL.Properties {
             get {
                 return ResourceManager.GetString("OrderRepository_SetInWorkStatus_Only_in_the_order_with_the_NewStatus_can_the_stat" +
                         "us_be_changed_to_InWork_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid order..
+        /// </summary>
+        public static string OrderRepository_Update_Invalid_order_ {
+            get {
+                return ResourceManager.GetString("OrderRepository_Update_Invalid_order_", resourceCulture);
             }
         }
         

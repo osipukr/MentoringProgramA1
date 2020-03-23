@@ -3,7 +3,6 @@ using Northwind.DAL.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using Northwind.DAL.Exceptions;
-using Northwind.DAL.Helpers;
 using Northwind.DAL.Interfaces;
 using Northwind.DAL.Properties;
 
@@ -29,7 +28,14 @@ namespace Northwind.DAL.Repositories
         {
             var command = $"SELECT * FROM {ORDERS_DBO_NAME}";
 
-            return ExecuteReaderCollectionInternal(command);
+            var orders = ExecuteReaderCollectionInternal(command);
+
+            if (orders == null)
+            {
+                throw new RepositoryException(Resources.OrderRepository_GetAll_The_orders_not_found_);
+            }
+
+            return orders;
         }
 
         public override Order Get(int id)
@@ -42,26 +48,31 @@ namespace Northwind.DAL.Repositories
             var command = $"SELECT * FROM {ORDERS_DBO_NAME} WHERE OrderId={ORDER_ID_PARAM_NAME};"
                           + $"SELECT * FROM {ORDER_DETAILS_DBO_NAME} AS o LEFT JOIN {PRODUCTS_DBO_NAME} AS p ON o.ProductID=p.ProductID WHERE o.OrderId={ORDER_ID_PARAM_NAME}";
 
-            return ExecuteReaderInternal(command, new[]
+            var order = ExecuteReaderInternal(command, new[]
             {
-                CreateParameterInternal(ORDER_ID_PARAM_NAME, id, SystemTypeToDbTypeHelper.GetComponentType(id.GetType()))
+                CreateParameterInternal(ORDER_ID_PARAM_NAME, id)
             });
+
+            if (order == null)
+            {
+                throw new RepositoryException(string.Format(Resources.OrderRepository_Get_, id));
+            }
+
+            return order;
         }
 
         public override void Add(Order entity)
         {
             if (entity == null)
             {
-                throw new ArgumentNullException(nameof(entity));
+                throw new RepositoryException(Resources.OrderRepository_Add_Invalid_order_);
             }
 
             var propertyMatcher = GetOrdersPropertyMatcher(entity);
 
             var commandText = $"INSERT INTO {ORDERS_DBO_NAME} " + $"VALUES(@{string.Join(", @", propertyMatcher.Keys)})";
 
-            var parameters = propertyMatcher.Select(x =>
-                    CreateParameterInternal(x.Key, x.Value, SystemTypeToDbTypeHelper.GetComponentType(x.Value.GetType())))
-                .ToArray();
+            var parameters = propertyMatcher.Select(x => CreateParameterInternal(x.Key, x.Value));
 
             ExecuteNonQueryInternal(commandText, parameters);
         }
@@ -70,7 +81,7 @@ namespace Northwind.DAL.Repositories
         {
             if (entity == null)
             {
-                throw new ArgumentNullException(nameof(entity));
+                throw new RepositoryException(Resources.OrderRepository_Update_Invalid_order_);
             }
 
             var order = Get(id);
@@ -91,9 +102,7 @@ namespace Northwind.DAL.Repositories
                               $"SET {string.Join(",", propertyMatcher.Keys.Select(key => $"{key}=@{key}"))} " +
                               $"WHERE OrderID={ORDER_ID_PARAM_NAME}";
 
-            var parameters = propertyMatcher.Select(x =>
-                    CreateParameterInternal(x.Key, x.Value, SystemTypeToDbTypeHelper.GetComponentType(x.Value.GetType())))
-                .ToArray();
+            var parameters = propertyMatcher.Select(x => CreateParameterInternal(x.Key, x.Value));
 
             ExecuteNonQueryInternal(commandText, parameters);
         }
@@ -111,7 +120,7 @@ namespace Northwind.DAL.Repositories
 
             ExecuteNonQueryInternal(commandText, new[]
             {
-                CreateParameterInternal(ORDER_ID_PARAM_NAME, id, SystemTypeToDbTypeHelper.GetComponentType(id.GetType()))
+                CreateParameterInternal(ORDER_ID_PARAM_NAME, id)
             });
         }
 
@@ -145,22 +154,46 @@ namespace Northwind.DAL.Repositories
 
         public IEnumerable<CustOrderHist> CustOrderHist(string customerId)
         {
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderHist_Invalid_customer_id_);
+            }
+
             var commandText = $"EXEC {CUST_ORDER_HIST_DBO_NAME} @CustomerID = '{CUSTOMER_ID_PARAM_NAME}';";
 
-            return ExecuteReaderCollectionInternal<CustOrderHist>(commandText, new[]
+            var result = ExecuteReaderCollectionInternal<CustOrderHist>(commandText, new[]
             {
-                CreateParameterInternal(CUSTOMER_ID_PARAM_NAME, customerId, SystemTypeToDbTypeHelper.GetComponentType(customerId.GetType()))
+                CreateParameterInternal(CUSTOMER_ID_PARAM_NAME, customerId)
             });
+
+            if (result == null)
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderHist_The_customer_order_hist_not_found_);
+            }
+
+            return result;
         }
 
         public IEnumerable<CustOrdersDetail> CustOrderDetail(int orderId)
         {
+            if (orderId < 1)
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderDetail_Invalid_order_id_);
+            }
+
             var commandText = $"EXEC {CUST_ORDERS_DETAIL_DBO_NAME} @OrderId = '{ORDER_ID_PARAM_NAME}';";
 
-            return ExecuteReaderCollectionInternal<CustOrdersDetail>(commandText, new[]
+            var result = ExecuteReaderCollectionInternal<CustOrdersDetail>(commandText, new[]
             {
-                CreateParameterInternal(ORDER_ID_PARAM_NAME, orderId, SystemTypeToDbTypeHelper.GetComponentType(orderId.GetType()))
+                CreateParameterInternal(ORDER_ID_PARAM_NAME, orderId)
             });
+
+            if (result == null)
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderDetail_The_customer_orders_details_not_found_);
+            }
+
+            return result;
         }
 
         private static IDictionary<string, object> GetOrdersPropertyMatcher(Order order)
@@ -169,9 +202,9 @@ namespace Northwind.DAL.Repositories
             {
                 {nameof(order.CustomerID), order.CustomerID},
                 {nameof(order.EmployeeID), order.EmployeeID},
-                {nameof(order.OrderDate), order.OrderDate.HasValue ? $"{order.OrderDate.Value:yyyy - MM - dd HH: mm:ss}" : null},
-                {nameof(order.RequiredDate), order.RequiredDate.HasValue ? $"{order.RequiredDate.Value:yyyy - MM - dd HH: mm:ss}" : null},
-                {nameof(order.ShippedDate), order.ShippedDate.HasValue ? $"{order.ShippedDate.Value:yyyy - MM - dd HH: mm:ss}" : null},
+                {nameof(order.OrderDate), order.OrderDate},
+                {nameof(order.RequiredDate), order.RequiredDate},
+                {nameof(order.ShippedDate), order.ShippedDate},
                 {nameof(order.ShipVia), order.ShipVia},
                 {nameof(order.Freight), order.Freight},
                 {nameof(order.ShipName), order.ShipName},

@@ -6,7 +6,8 @@ namespace Northwind.DAL.Interfaces
     {
         IDbConnection CreateConnection();
         IDbCommand CreateCommand(string commandText, CommandType commandType, IDbConnection connection);
-        IDbDataParameter CreateParameter(string name, object value, DbType dbType, ParameterDirection direction);
+        IDbCommand CreateCommand(string commandText, CommandType commandType, IDbConnection connection, IDbTransaction transaction);
+        IDbDataParameter CreateParameter(string name, object value);
         void CloseConnection(IDbConnection connection);
     }
 }

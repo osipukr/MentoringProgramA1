@@ -42,21 +42,24 @@ namespace Northwind.DAL.Services
 
             var sqlConnection = (SqlConnection)connection;
 
-            return new SqlCommand
+            return new SqlCommand(commandText, sqlConnection)
             {
-                CommandText = commandText,
-                Connection = sqlConnection,
                 CommandType = commandType
             };
         }
 
-        public IDbDataParameter CreateParameter(string name, object value, DbType dbType, ParameterDirection direction)
+        public IDbCommand CreateCommand(string commandText, CommandType commandType, IDbConnection connection, IDbTransaction transaction)
         {
-            return new SqlParameter(name, dbType)
-            {
-                Direction = direction,
-                Value = value
-            };
+            var command = CreateCommand(commandText, commandType, connection);
+
+            command.Transaction = transaction;
+
+            return command;
+        }
+
+        public IDbDataParameter CreateParameter(string name, object value)
+        {
+            return new SqlParameter(name, value);
         }
 
         public void CloseConnection(IDbConnection connection)
