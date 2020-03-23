@@ -15,7 +15,11 @@ namespace Northwind.DAL.Repositories
         private const string ORDER_DETAILS_DBO_NAME = "[dbo].[Orders Details]";
         private const string PRODUCTS_DBO_NAME = "[dbo].[Products]";
 
+        private const string CUST_ORDER_HIST_PROCEDURE_NAME = "[dbo].[CustOrderHist]";
+        private const string CUST_ORDERS_DETAIL_PROCEDURE_NAME = "[dbo].[CustOrdersDetail]";
+
         private const string ORDER_ID_PARAM_NAME = "@orderId";
+        private const string CUSTOMER_ID_PARAM_NAME = "@customerId";
 
         public OrderRepository(IDatabaseHandler databaseHandler, IDataMapper dataMapper)
             : base(databaseHandler, dataMapper)
@@ -46,7 +50,7 @@ namespace Northwind.DAL.Repositories
             var command = $"SELECT * FROM {ORDERS_DBO_NAME} WHERE OrderId={ORDER_ID_PARAM_NAME};"
                           + $"SELECT * FROM {ORDER_DETAILS_DBO_NAME} AS o LEFT JOIN {PRODUCTS_DBO_NAME} AS p ON o.ProductID=p.ProductID WHERE o.OrderId={ORDER_ID_PARAM_NAME}";
 
-            var order = ExecuteReaderInternal(command, parameters: new []
+            var order = ExecuteReaderInternal(command, parameters: new[]
             {
                 CreateParameterInternal(ORDER_ID_PARAM_NAME, id)
             });
@@ -150,6 +154,50 @@ namespace Northwind.DAL.Repositories
             order.ShippedDate = DateTime.UtcNow;
 
             Update(id, order);
+        }
+
+        public IEnumerable<CustOrderHist> CustOrderHist(string customerId)
+        {
+            if (string.IsNullOrWhiteSpace(customerId))
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderHist_Invalid_customer_id_);
+            }
+
+            var commandText = CUST_ORDER_HIST_PROCEDURE_NAME;
+
+            var result = ExecuteReaderCollectionInternal<CustOrderHist>(commandText, CommandType.StoredProcedure, new[]
+            {
+                CreateParameterInternal(CUSTOMER_ID_PARAM_NAME, customerId)
+            });
+
+            if (result == null)
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderHist_The_customer_order_hist_not_found_);
+            }
+
+            return result;
+        }
+
+        public IEnumerable<CustOrdersDetail> CustOrderDetail(int orderId)
+        {
+            if (orderId < 1)
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderDetail_Invalid_order_id_);
+            }
+
+            var commandText = CUST_ORDERS_DETAIL_PROCEDURE_NAME;
+
+            var result = ExecuteReaderCollectionInternal<CustOrdersDetail>(commandText, CommandType.StoredProcedure, new[]
+            {
+                CreateParameterInternal(ORDER_ID_PARAM_NAME, orderId)
+            });
+
+            if (result == null)
+            {
+                throw new RepositoryException(Resources.OrderRepository_CustOrderDetail_The_customer_orders_details_not_found_);
+            }
+
+            return result;
         }
 
         private static IDictionary<string, object> GetOrdersPropertyMatcher(Order order)

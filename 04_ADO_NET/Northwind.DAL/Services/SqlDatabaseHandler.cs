@@ -59,6 +59,16 @@ namespace Northwind.DAL.Services
 
         public IDbDataParameter CreateParameter(string name, object value)
         {
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return new SqlParameter(name, value);
         }
 

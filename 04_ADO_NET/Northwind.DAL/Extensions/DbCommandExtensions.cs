@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 
 namespace Northwind.DAL.Extensions
@@ -8,11 +7,6 @@ namespace Northwind.DAL.Extensions
     {
         public static void AddParameters(this IDbCommand command, IEnumerable<IDbDataParameter> parameters)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException(nameof(command));
-            }
-
             if (parameters != null)
             {
                 foreach (var parameter in parameters)

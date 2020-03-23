@@ -55,29 +55,11 @@ namespace Northwind.DAL.Repositories
 
         protected IEnumerable<TEntity> ExecuteReaderCollectionInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
         {
-            using var connection = _databaseHandler.CreateConnection();
-
-            connection.Open();
-
-            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection);
-
-            command.AddParameters(parameters);
-
-            using var reader = command.ExecuteReader();
-
-            var entities = new List<TEntity>();
-
-            while (reader.Read())
-            {
-                entities.Add(_dataMapper.Map<TEntity>(reader));
-            }
-
-            _databaseHandler.CloseConnection(connection);
-
-            return !entities.Any() ? null : entities;
+            return ExecuteReaderCollectionInternal<TEntity>(commandText, commandType, parameters);
         }
 
-        protected TEntity ExecuteReaderInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        protected IEnumerable<T> ExecuteReaderCollectionInternal<T>(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+            where T : IEntity
         {
             using var connection = _databaseHandler.CreateConnection();
 
@@ -89,11 +71,41 @@ namespace Northwind.DAL.Repositories
 
             using var reader = command.ExecuteReader();
 
-            var entity = default(TEntity);
+            var entities = new List<T>();
+
+            while (reader.Read())
+            {
+                entities.Add(_dataMapper.Map<T>(reader));
+            }
+
+            _databaseHandler.CloseConnection(connection);
+
+            return entities.Any() ? entities : null;
+        }
+
+        protected TEntity ExecuteReaderInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        {
+            return ExecuteReaderInternal<TEntity>(commandText, commandType, parameters);
+        }
+
+        protected T ExecuteReaderInternal<T>(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+            where T : IEntity
+        {
+            using var connection = _databaseHandler.CreateConnection();
+
+            connection.Open();
+
+            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection);
+
+            command.AddParameters(parameters);
+
+            using var reader = command.ExecuteReader();
+
+            var entity = default(T);
 
             if (reader.Read())
             {
-                entity = _dataMapper.Map<TEntity>(reader);
+                entity = _dataMapper.Map<T>(reader);
             }
 
             _databaseHandler.CloseConnection(connection);
