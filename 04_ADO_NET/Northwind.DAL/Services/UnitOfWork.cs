@@ -7,14 +7,14 @@ namespace Northwind.DAL.Services
 {
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
-        private readonly IDatabaseHandler _databaseHandler;
-        private readonly IDataMapper _dataMapper;
-        private readonly IOrderRepository _orderRepository;
+        private IDatabaseHandler _databaseHandler;
+        private IDataMapper _dataMapper;
 
-        private readonly Dictionary<Type, Type> _interfaceToRepositoryMatcher = new Dictionary<Type, Type>
-        {
-            {typeof(IOrderRepository), typeof(OrderRepository)}
-        };
+        private static readonly Dictionary<Type, Type> InterfaceToRepositoryMatcher =
+            new Dictionary<Type, Type>
+            {
+                {typeof(IOrderRepository), typeof(OrderRepository)}
+            };
 
         /// <summary>
         /// Ctor.
@@ -26,17 +26,18 @@ namespace Northwind.DAL.Services
             _databaseHandler = databaseHandler ?? throw new ArgumentNullException(nameof(databaseHandler));
             _dataMapper = dataMapper ?? throw new ArgumentNullException(nameof(dataMapper));
 
-            _orderRepository = CreateRepository<IOrderRepository>();
+            OrderRepository = CreateRepository<IOrderRepository>();
         }
 
         /// <summary>
         /// Gets order repository.
         /// </summary>
-        public IOrderRepository OrderRepository => _orderRepository;
+        public IOrderRepository OrderRepository { get; }
 
         public void Dispose()
         {
-            // Do something
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         private TRepository CreateRepository<TRepository>()
@@ -48,16 +49,37 @@ namespace Northwind.DAL.Services
                 throw new ArgumentNullException(nameof(interfaceType));
             }
 
-            if (!_interfaceToRepositoryMatcher.ContainsKey(interfaceType))
+            if (!InterfaceToRepositoryMatcher.ContainsKey(interfaceType))
             {
                 throw new ArgumentException(nameof(TRepository));
             }
 
-            var repositoryType = _interfaceToRepositoryMatcher[interfaceType];
+            var repositoryType = InterfaceToRepositoryMatcher[interfaceType];
 
             var repository = Activator.CreateInstance(repositoryType, _databaseHandler, _dataMapper);
 
             return (TRepository)repository;
+        }
+
+        private bool _isDisposed;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
+                    _databaseHandler = null;
+                    _dataMapper = null;
+                }
+
+                _isDisposed = true;
+            }
+        }
+
+        ~UnitOfWork()
+        {
+            Dispose(false);
         }
     }
 }

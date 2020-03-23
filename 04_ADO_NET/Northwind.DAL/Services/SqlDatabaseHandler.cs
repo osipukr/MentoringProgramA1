@@ -37,7 +37,7 @@ namespace Northwind.DAL.Services
 
             if (!Enum.IsDefined(typeof(CommandType), commandType))
             {
-                throw new InvalidEnumArgumentException(nameof(commandType), (int) commandType, typeof(CommandType));
+                throw new InvalidEnumArgumentException(nameof(commandType), (int)commandType, typeof(CommandType));
             }
 
             var sqlConnection = (SqlConnection)connection;
@@ -79,10 +79,7 @@ namespace Northwind.DAL.Services
                 throw new ArgumentNullException(nameof(connection));
             }
 
-            var sqlConnection = (SqlConnection)connection;
-
-            sqlConnection.Close();
-            sqlConnection.Dispose();
+            ((SqlConnection)connection).Close();
         }
     }
 }
