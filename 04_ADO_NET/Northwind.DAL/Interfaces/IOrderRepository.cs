@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Northwind.DAL.Entities;
+﻿using Northwind.DAL.Entities;
 
 namespace Northwind.DAL.Interfaces
 {
@@ -7,7 +6,5 @@ namespace Northwind.DAL.Interfaces
     {
         void SetInWorkStatus(int id);
         void SetCompletedStatus(int id);
-        IEnumerable<CustOrderHist> CustOrderHist(string customerId);
-        IEnumerable<CustOrdersDetail> CustOrderDetail(int orderId);
     }
 }

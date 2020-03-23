@@ -6,12 +6,14 @@ using Northwind.DAL.Interfaces;
 using Northwind.DAL.Repositories;
 using Northwind.DAL.UnitTests.Stubs;
 using Xunit;
+using Xunit.Priority;
 
 namespace Northwind.DAL.UnitTests.Repositories
 {
     /// <summary>
     /// Test class for <see cref="OrderRepository"/>.
     /// </summary>
+    [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Assembly)]
     public class OrderRepositoryTests
     {
         private readonly IOrderRepository _orderRepository;
@@ -22,6 +24,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(1)]
         public void GetAll_EmptyParams_ShouldReturnOrderList()
         {
             // Act
@@ -33,6 +36,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(2)]
         public void Get_ExistingId_ShouldReturnOrderDetails()
         {
             // Arrange
@@ -49,6 +53,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Theory]
+        [Priority(3)]
         [InlineData(0)]
         [InlineData(-100)]
         [InlineData(1000000)]
@@ -60,6 +65,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(4)]
         public void Add_ValidOrder_ShouldBeInsertedSuccessfully()
         {
             // Arrange
@@ -69,9 +75,6 @@ namespace Northwind.DAL.UnitTests.Repositories
                 CustomerID = "WARTH",
                 EmployeeID = 5,
                 Freight = 100,
-                OrderDate = DateTime.UtcNow,
-                RequiredDate = DateTime.UtcNow,
-                ShippedDate = DateTime.UtcNow,
                 ShipAddress = "",
                 ShipCity = "Cowes",
                 ShipCountry = "UK",
@@ -91,6 +94,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(5)]
         public void Add_InvalidOrder_ShouldThrowRepositoryException()
         {
             // Act & Assert
@@ -98,10 +102,11 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(6)]
         public void Update_ValidOrder_ShouldBeUpdatedSuccess()
         {
             // Arrange
-            const int id = 10254;
+            const int id = 10257;
 
             var order = new Order
             {
@@ -118,6 +123,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(7)]
         public void Update_InvalidOrder_ShouldThrowRepositoryException()
         {
             // Act & Assert
@@ -125,6 +131,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(8)]
         public void Update_InvalidOrderId_ShouldThrowRepositoryException()
         {
             // Act & Assert
@@ -132,6 +139,7 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(9)]
         public void Update_OrderWithInWorkStatus_ShouldThrowRepositoryException()
         {
             // Act & Assert
@@ -144,57 +152,80 @@ namespace Northwind.DAL.UnitTests.Repositories
         }
 
         [Fact]
+        [Priority(10)]
+        public void Delete_ValidOrderId_ShouldBeDeleteOrderById()
+        {
+            // Arrange
+            var id = _orderRepository.GetAll().Last().OrderId;
+
+            var ordersCountBeforeRemove = _orderRepository.GetAll().Count();
+
+            // Act
+            _orderRepository.Delete(id);
+
+            var ordersCountAfterRemove = _orderRepository.GetAll().Count();
+
+            // Assert
+            Assert.Equal(ordersCountBeforeRemove, ordersCountAfterRemove + 1);
+        }
+
+        [Fact]
+        [Priority(11)]
         public void Delete_OrderWithStatusIsCompleted_ShouldThrowRepositoryException()
         {
             // Act & Assert
             Assert.Throws<RepositoryException>(() => _orderRepository.Delete(11101));
         }
 
-        [Fact]
-        public void CustOrderHist_ValidCustomerId_ShouldReturnCustOrderHistList()
-        {
-            // Arrange
-            const string customerId = "TOMSP";
+        //[Fact]
+        //[Priority(12)]
+        //public void CustOrderHist_ValidCustomerId_ShouldReturnCustOrderHistList()
+        //{
+        //    // Arrange
+        //    const string customerId = "39";
 
-            // Act
-            var result = _orderRepository.CustOrderHist(customerId);
+        //    // Act
+        //    var result = _orderRepository.CustOrderHist(customerId);
 
-            // Assert
-            Assert.NotEmpty(result);
-        }
+        //    // Assert
+        //    Assert.NotEmpty(result);
+        //}
 
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        [InlineData("         ")]
-        [InlineData("ASDASDASDASDASD")]
-        public void CustOrderHist_InvalidCustomerId_ShouldThrowRepositoryException(string customerId)
-        {
-            // Act
-            Assert.Throws<RepositoryException>(() => _orderRepository.CustOrderHist(customerId));
-        }
+        //[Theory]
+        //[Priority(13)]
+        //[InlineData(null)]
+        //[InlineData("")]
+        //[InlineData("         ")]
+        //[InlineData("ASDASDASDASDASD")]
+        //public void CustOrderHist_InvalidCustomerId_ShouldThrowRepositoryException(string customerId)
+        //{
+        //    // Act
+        //    Assert.Throws<RepositoryException>(() => _orderRepository.CustOrderHist(customerId));
+        //}
 
-        [Fact]
-        public void CustOrderDetail_ValidOrderId_ShouldReturnCustOrderDetailList()
-        {
-            // Arrange
-            const int orderId = 10250;
+        //[Fact]
+        //[Priority(14)]
+        //public void CustOrderDetail_ValidOrderId_ShouldReturnCustOrderDetailList()
+        //{
+        //    // Arrange
+        //    const int orderId = 10254;
 
-            // Act
-            var result = _orderRepository.CustOrderDetail(orderId);
+        //    // Act
+        //    var result = _orderRepository.CustOrderDetail(orderId);
 
-            // Assert
-            Assert.NotEmpty(result);
-        }
+        //    // Assert
+        //    Assert.NotEmpty(result);
+        //}
 
-        [Theory]
-        [InlineData(0)]
-        [InlineData(-100)]
-        [InlineData(66666)]
-        public void CustOrderHist_InvalidOrderId_ShouldThrowRepositoryException(int orderId)
-        {
-            // Act
-            Assert.Throws<RepositoryException>(() => _orderRepository.CustOrderDetail(orderId));
-        }
+        //[Theory]
+        //[Priority(15)]
+        //[InlineData(0)]
+        //[InlineData(-100)]
+        //[InlineData(10000000)]
+        //public void CustOrderHist_InvalidOrderId_ShouldThrowRepositoryException(int orderId)
+        //{
+        //    // Act
+        //    Assert.Throws<RepositoryException>(() => _orderRepository.CustOrderDetail(orderId));
+        //}
     }
 }

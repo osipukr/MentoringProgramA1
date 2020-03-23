@@ -8,26 +8,25 @@ namespace Northwind.DAL.UnitTests.Stubs
 {
     public class DataMapperStub : IDataMapper
     {
-        public TEntity Map<TEntity>(IDataReader reader) where TEntity : IEntity, new()
+        public TEntity Map<TEntity>(IDataReader reader) where TEntity : IEntity
         {
-            var propertyInfo = typeof(TEntity).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var columnNames = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
+            var propertyInfo = typeof(TEntity).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty);
+            var columnNames = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
+
             var obj = Activator.CreateInstance<TEntity>();
 
             foreach (var property in propertyInfo)
             {
-                if (!columnNames.Any(s => s.Equals(property.Name, StringComparison.OrdinalIgnoreCase)))
+                if (columnNames.Any(s => s.Equals(property.Name, StringComparison.OrdinalIgnoreCase)))
                 {
-                    continue;
-                }
-
-                try
-                {
-                    property.SetValue(obj, reader[property.Name]);
-                }
-                catch (ArgumentException)
-                {
-                    property.SetValue(obj, default(TEntity));
+                    try
+                    {
+                        property.SetValue(obj, reader[property.Name]);
+                    }
+                    catch (Exception)
+                    {
+                        property.SetValue(obj, default);
+                    }
                 }
             }
 

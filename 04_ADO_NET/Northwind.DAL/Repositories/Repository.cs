@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using Northwind.DAL.Extensions;
 using Northwind.DAL.Interfaces;
 
 namespace Northwind.DAL.Repositories
 {
-    public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : IEntity, new()
+    public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : IEntity
     {
         protected readonly IDatabaseHandler _databaseHandler;
         protected readonly IDataMapper _dataMapper;
@@ -23,7 +24,7 @@ namespace Northwind.DAL.Repositories
         public abstract void Update(int id, TEntity entity);
         public abstract void Delete(int id);
 
-        protected void ExecuteNonQueryInternal(string commandText, IEnumerable<IDbDataParameter> parameters = null)
+        protected void ExecuteNonQueryInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
         {
             using var connection = _databaseHandler.CreateConnection();
 
@@ -31,7 +32,7 @@ namespace Northwind.DAL.Repositories
 
             var transactionScope = connection.BeginTransaction();
 
-            using var command = _databaseHandler.CreateCommand(commandText, CommandType.Text, connection, transactionScope);
+            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection, transactionScope);
 
             command.AddParameters(parameters);
 
@@ -52,65 +53,47 @@ namespace Northwind.DAL.Repositories
             _databaseHandler.CloseConnection(connection);
         }
 
-        protected IEnumerable<TEntity> ExecuteReaderCollectionInternal(string commandText, IEnumerable<IDbDataParameter> parameters = null)
-        {
-            return ExecuteReaderCollectionInternal<TEntity>(commandText, parameters);
-        }
-
-        protected IEnumerable<T> ExecuteReaderCollectionInternal<T>(string commandText, IEnumerable<IDbDataParameter> parameters = null)
-            where T : IEntity, new()
+        protected IEnumerable<TEntity> ExecuteReaderCollectionInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
         {
             using var connection = _databaseHandler.CreateConnection();
 
             connection.Open();
 
-            using var command = _databaseHandler.CreateCommand(commandText, CommandType.Text, connection);
-
-            command.AddParameters(parameters);
-
-            var reader = command.ExecuteReader();
-
-            List<T> entities = null;
-
-            if (reader.Read())
-            {
-                entities = new List<T>();
-
-                do
-                {
-                    entities.Add(_dataMapper.Map<T>(reader));
-
-                } while (reader.Read());
-            }
-
-            _databaseHandler.CloseConnection(connection);
-
-            return entities;
-        }
-
-        protected TEntity ExecuteReaderInternal(string commandText, IEnumerable<IDbDataParameter> parameters = null)
-        {
-            return ExecuteReaderInternal<TEntity>(commandText, parameters);
-        }
-
-        protected T ExecuteReaderInternal<T>(string commandText, IEnumerable<IDbDataParameter> parameters = null)
-            where T : IEntity, new()
-        {
-            using var connection = _databaseHandler.CreateConnection();
-
-            connection.Open();
-
-            using var command = _databaseHandler.CreateCommand(commandText, CommandType.Text, connection);
+            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection);
 
             command.AddParameters(parameters);
 
             using var reader = command.ExecuteReader();
 
-            var entity = default(T);
+            var entities = new List<TEntity>();
+
+            while (reader.Read())
+            {
+                entities.Add(_dataMapper.Map<TEntity>(reader));
+            }
+
+            _databaseHandler.CloseConnection(connection);
+
+            return !entities.Any() ? null : entities;
+        }
+
+        protected TEntity ExecuteReaderInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        {
+            using var connection = _databaseHandler.CreateConnection();
+
+            connection.Open();
+
+            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection);
+
+            command.AddParameters(parameters);
+
+            using var reader = command.ExecuteReader();
+
+            var entity = default(TEntity);
 
             if (reader.Read())
             {
-                entity = _dataMapper.Map<T>(reader);
+                entity = _dataMapper.Map<TEntity>(reader);
             }
 
             _databaseHandler.CloseConnection(connection);
@@ -118,9 +101,12 @@ namespace Northwind.DAL.Repositories
             return entity;
         }
 
-        protected IDbDataParameter CreateParameterInternal<TValue>(string name, TValue value)
+        protected IDbDataParameter CreateParameterInternal<T>(string name, T value)
         {
-            return _databaseHandler.CreateParameter(name, value);
+            return _databaseHandler.CreateParameter(name,
+                EqualityComparer<T>.Default.Equals(value, default)
+                    ? (object)DBNull.Value
+                    : value);
         }
     }
 }

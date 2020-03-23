@@ -8,15 +8,15 @@ namespace Northwind.DAL.Mapping
 {
     public class DataMapper : IDataMapper
     {
-        public TEntity Map<TEntity>(IDataReader reader) where TEntity : IEntity, new()
+        public TEntity Map<TEntity>(IDataReader reader) where TEntity : IEntity
         {
             if (reader == null)
             {
                 throw new ArgumentNullException();
             }
 
-            var propertyInfo = typeof(TEntity).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var columnNames = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
+            var propertyInfo = typeof(TEntity).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.SetProperty);
+            var columnNames = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToArray();
             var obj = Activator.CreateInstance<TEntity>();
 
             foreach (var property in propertyInfo)
@@ -28,11 +28,13 @@ namespace Northwind.DAL.Mapping
 
                 try
                 {
-                    property.SetValue(obj, reader[property.Name]);
+                    var value = reader[property.Name];
+
+                    property.SetValue(obj, value, null);
                 }
-                catch (ArgumentException)
+                catch (Exception)
                 {
-                    property.SetValue(obj, default(TEntity));
+                    // ignored
                 }
             }
 

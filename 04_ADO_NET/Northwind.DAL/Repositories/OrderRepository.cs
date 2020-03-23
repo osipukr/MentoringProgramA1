@@ -1,6 +1,7 @@
 ﻿using System;
 using Northwind.DAL.Entities;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Northwind.DAL.Exceptions;
 using Northwind.DAL.Interfaces;
@@ -13,11 +14,8 @@ namespace Northwind.DAL.Repositories
         private const string ORDERS_DBO_NAME = "[dbo].[Orders]";
         private const string ORDER_DETAILS_DBO_NAME = "[dbo].[Orders Details]";
         private const string PRODUCTS_DBO_NAME = "[dbo].[Products]";
-        private const string CUST_ORDER_HIST_DBO_NAME = "[dbo].[CustOrderHist]";
-        private const string CUST_ORDERS_DETAIL_DBO_NAME = "[dbo].[CustOrdersDetail]";
 
         private const string ORDER_ID_PARAM_NAME = "@orderId";
-        private const string CUSTOMER_ID_PARAM_NAME = "@customerId";
 
         public OrderRepository(IDatabaseHandler databaseHandler, IDataMapper dataMapper)
             : base(databaseHandler, dataMapper)
@@ -48,7 +46,7 @@ namespace Northwind.DAL.Repositories
             var command = $"SELECT * FROM {ORDERS_DBO_NAME} WHERE OrderId={ORDER_ID_PARAM_NAME};"
                           + $"SELECT * FROM {ORDER_DETAILS_DBO_NAME} AS o LEFT JOIN {PRODUCTS_DBO_NAME} AS p ON o.ProductID=p.ProductID WHERE o.OrderId={ORDER_ID_PARAM_NAME}";
 
-            var order = ExecuteReaderInternal(command, new[]
+            var order = ExecuteReaderInternal(command, parameters: new []
             {
                 CreateParameterInternal(ORDER_ID_PARAM_NAME, id)
             });
@@ -74,7 +72,7 @@ namespace Northwind.DAL.Repositories
 
             var parameters = propertyMatcher.Select(x => CreateParameterInternal(x.Key, x.Value));
 
-            ExecuteNonQueryInternal(commandText, parameters);
+            ExecuteNonQueryInternal(commandText, parameters: parameters);
         }
 
         public override void Update(int id, Order entity)
@@ -102,9 +100,11 @@ namespace Northwind.DAL.Repositories
                               $"SET {string.Join(",", propertyMatcher.Keys.Select(key => $"{key}=@{key}"))} " +
                               $"WHERE OrderID={ORDER_ID_PARAM_NAME}";
 
-            var parameters = propertyMatcher.Select(x => CreateParameterInternal(x.Key, x.Value));
+            var parameters = propertyMatcher.Select(x => CreateParameterInternal(x.Key, x.Value)).ToList();
 
-            ExecuteNonQueryInternal(commandText, parameters);
+            parameters.Add(CreateParameterInternal(ORDER_ID_PARAM_NAME, id));
+
+            ExecuteNonQueryInternal(commandText, parameters: parameters);
         }
 
         public override void Delete(int id)
@@ -118,7 +118,7 @@ namespace Northwind.DAL.Repositories
 
             var commandText = $"DELETE FROM {ORDERS_DBO_NAME} WHERE OrderID={ORDER_ID_PARAM_NAME}";
 
-            ExecuteNonQueryInternal(commandText, new[]
+            ExecuteNonQueryInternal(commandText, parameters: new[]
             {
                 CreateParameterInternal(ORDER_ID_PARAM_NAME, id)
             });
@@ -152,59 +152,15 @@ namespace Northwind.DAL.Repositories
             Update(id, order);
         }
 
-        public IEnumerable<CustOrderHist> CustOrderHist(string customerId)
-        {
-            if (string.IsNullOrWhiteSpace(customerId))
-            {
-                throw new RepositoryException(Resources.OrderRepository_CustOrderHist_Invalid_customer_id_);
-            }
-
-            var commandText = $"EXEC {CUST_ORDER_HIST_DBO_NAME} @CustomerID = '{CUSTOMER_ID_PARAM_NAME}';";
-
-            var result = ExecuteReaderCollectionInternal<CustOrderHist>(commandText, new[]
-            {
-                CreateParameterInternal(CUSTOMER_ID_PARAM_NAME, customerId)
-            });
-
-            if (result == null)
-            {
-                throw new RepositoryException(Resources.OrderRepository_CustOrderHist_The_customer_order_hist_not_found_);
-            }
-
-            return result;
-        }
-
-        public IEnumerable<CustOrdersDetail> CustOrderDetail(int orderId)
-        {
-            if (orderId < 1)
-            {
-                throw new RepositoryException(Resources.OrderRepository_CustOrderDetail_Invalid_order_id_);
-            }
-
-            var commandText = $"EXEC {CUST_ORDERS_DETAIL_DBO_NAME} @OrderId = '{ORDER_ID_PARAM_NAME}';";
-
-            var result = ExecuteReaderCollectionInternal<CustOrdersDetail>(commandText, new[]
-            {
-                CreateParameterInternal(ORDER_ID_PARAM_NAME, orderId)
-            });
-
-            if (result == null)
-            {
-                throw new RepositoryException(Resources.OrderRepository_CustOrderDetail_The_customer_orders_details_not_found_);
-            }
-
-            return result;
-        }
-
         private static IDictionary<string, object> GetOrdersPropertyMatcher(Order order)
         {
             return new Dictionary<string, object>
             {
                 {nameof(order.CustomerID), order.CustomerID},
                 {nameof(order.EmployeeID), order.EmployeeID},
-                {nameof(order.OrderDate), order.OrderDate},
-                {nameof(order.RequiredDate), order.RequiredDate},
-                {nameof(order.ShippedDate), order.ShippedDate},
+                {nameof(order.OrderDate), order.OrderDate.HasValue ? $"{order.OrderDate.Value:yyyy - MM - dd HH: mm:ss}" : null},
+                {nameof(order.RequiredDate), order.RequiredDate.HasValue ? $"{order.RequiredDate.Value:yyyy - MM - dd HH: mm:ss}" : null},
+                {nameof(order.ShippedDate), order.ShippedDate.HasValue ? $"{order.ShippedDate.Value:yyyy - MM - dd HH: mm:ss}" : null},
                 {nameof(order.ShipVia), order.ShipVia},
                 {nameof(order.Freight), order.Freight},
                 {nameof(order.ShipName), order.ShipName},
