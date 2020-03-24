@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using Northwind.DAL.Interfaces;
 using Northwind.DAL.Repositories;
 
@@ -9,6 +10,7 @@ namespace Northwind.DAL.Services
     {
         private IDatabaseHandler _databaseHandler;
         private IDataMapper _dataMapper;
+        private IDbConnection _dbConnection;
 
         private static readonly Dictionary<Type, Type> InterfaceToRepositoryMatcher =
             new Dictionary<Type, Type>
@@ -25,6 +27,8 @@ namespace Northwind.DAL.Services
         {
             _databaseHandler = databaseHandler ?? throw new ArgumentNullException(nameof(databaseHandler));
             _dataMapper = dataMapper ?? throw new ArgumentNullException(nameof(dataMapper));
+
+            _dbConnection = _databaseHandler.CreateConnection();
 
             OrderRepository = CreateRepository<IOrderRepository>();
         }
@@ -44,19 +48,19 @@ namespace Northwind.DAL.Services
         {
             var interfaceType = typeof(TRepository);
 
-            if (interfaceType == null)
+            if (interfaceType == null || !InterfaceToRepositoryMatcher.ContainsKey(interfaceType))
             {
-                throw new ArgumentNullException(nameof(interfaceType));
-            }
-
-            if (!InterfaceToRepositoryMatcher.ContainsKey(interfaceType))
-            {
-                throw new ArgumentException(nameof(TRepository));
+                throw new KeyNotFoundException(nameof(TRepository));
             }
 
             var repositoryType = InterfaceToRepositoryMatcher[interfaceType];
 
-            var repository = Activator.CreateInstance(repositoryType, _databaseHandler, _dataMapper);
+            var repository = Activator.CreateInstance(repositoryType, _dbConnection, _dataMapper);
+
+            if (repository == null)
+            {
+                throw new ArgumentException(null, nameof(repository));
+            }
 
             return (TRepository)repository;
         }
@@ -69,6 +73,7 @@ namespace Northwind.DAL.Services
             {
                 if (disposing)
                 {
+                    _databaseHandler?.CloseConnection(_dbConnection);
                     _databaseHandler = null;
                     _dataMapper = null;
                 }

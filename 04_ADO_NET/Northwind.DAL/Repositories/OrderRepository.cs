@@ -21,8 +21,8 @@ namespace Northwind.DAL.Repositories
         private const string ORDER_ID_PARAM_NAME = "@orderId";
         private const string CUSTOMER_ID_PARAM_NAME = "@customerId";
 
-        public OrderRepository(IDatabaseHandler databaseHandler, IDataMapper dataMapper)
-            : base(databaseHandler, dataMapper)
+        public OrderRepository(IDbConnection dbConnection, IDataMapper dataMapper)
+            : base(dbConnection, dataMapper)
         {
         }
 

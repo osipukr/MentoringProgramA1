@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using Northwind.DAL.Extensions;
 using Northwind.DAL.Interfaces;
 
 namespace Northwind.DAL.Repositories
 {
     public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : IEntity
     {
-        protected readonly IDatabaseHandler _databaseHandler;
+        protected readonly IDbConnection _dbConnection;
         protected readonly IDataMapper _dataMapper;
 
-        protected Repository(IDatabaseHandler databaseHandler, IDataMapper dataMapper)
+        protected Repository(IDbConnection dbConnection, IDataMapper dataMapper)
         {
-            _databaseHandler = databaseHandler;
-            _dataMapper = dataMapper;
+            _dbConnection = dbConnection ?? throw new ArgumentNullException(nameof(dbConnection));
+            _dataMapper = dataMapper ?? throw new ArgumentNullException(nameof(dataMapper));
         }
 
         public abstract IEnumerable<TEntity> GetAll();
@@ -24,17 +23,16 @@ namespace Northwind.DAL.Repositories
         public abstract void Update(int id, TEntity entity);
         public abstract void Delete(int id);
 
-        protected void ExecuteNonQueryInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        protected void ExecuteNonQueryInternal(
+            string commandText,
+            CommandType commandType = CommandType.Text,
+            IEnumerable<Tuple<string, object>> parameters = null)
         {
-            using var connection = _databaseHandler.CreateConnection();
+            _dbConnection.Open();
 
-            connection.Open();
+            var transactionScope = _dbConnection.BeginTransaction();
 
-            var transactionScope = connection.BeginTransaction();
-
-            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection, transactionScope);
-
-            command.AddParameters(parameters);
+            using var command = CreateCommand(commandText, commandType, parameters, transactionScope);
 
             try
             {
@@ -47,27 +45,27 @@ namespace Northwind.DAL.Repositories
             }
             finally
             {
-                connection.Close();
+                _dbConnection.Close();
             }
-
-            _databaseHandler.CloseConnection(connection);
         }
 
-        protected IEnumerable<TEntity> ExecuteReaderCollectionInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        protected IEnumerable<TEntity> ExecuteReaderCollectionInternal(
+            string commandText,
+            CommandType commandType = CommandType.Text,
+            IEnumerable<Tuple<string, object>> parameters = null)
         {
             return ExecuteReaderCollectionInternal<TEntity>(commandText, commandType, parameters);
         }
 
-        protected IEnumerable<T> ExecuteReaderCollectionInternal<T>(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        protected IEnumerable<T> ExecuteReaderCollectionInternal<T>(
+            string commandText,
+            CommandType commandType = CommandType.Text,
+            IEnumerable<Tuple<string, object>> parameters = null)
             where T : IEntity
         {
-            using var connection = _databaseHandler.CreateConnection();
+            _dbConnection.Open();
 
-            connection.Open();
-
-            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection);
-
-            command.AddParameters(parameters);
+            using var command = CreateCommand(commandText, commandType, parameters);
 
             using var reader = command.ExecuteReader();
 
@@ -78,26 +76,28 @@ namespace Northwind.DAL.Repositories
                 entities.Add(_dataMapper.Map<T>(reader));
             }
 
-            _databaseHandler.CloseConnection(connection);
+            _dbConnection.Close();
 
             return entities.Any() ? entities : null;
         }
 
-        protected TEntity ExecuteReaderInternal(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        protected TEntity ExecuteReaderInternal(
+            string commandText,
+            CommandType commandType = CommandType.Text,
+            IEnumerable<Tuple<string, object>> parameters = null)
         {
             return ExecuteReaderInternal<TEntity>(commandText, commandType, parameters);
         }
 
-        protected T ExecuteReaderInternal<T>(string commandText, CommandType commandType = CommandType.Text, IEnumerable<IDbDataParameter> parameters = null)
+        protected T ExecuteReaderInternal<T>(
+            string commandText,
+            CommandType commandType = CommandType.Text,
+            IEnumerable<Tuple<string, object>> parameters = null)
             where T : IEntity
         {
-            using var connection = _databaseHandler.CreateConnection();
+            _dbConnection.Open();
 
-            connection.Open();
-
-            using var command = _databaseHandler.CreateCommand(commandText, commandType, connection);
-
-            command.AddParameters(parameters);
+            using var command = CreateCommand(commandText, commandType, parameters);
 
             using var reader = command.ExecuteReader();
 
@@ -108,17 +108,45 @@ namespace Northwind.DAL.Repositories
                 entity = _dataMapper.Map<T>(reader);
             }
 
-            _databaseHandler.CloseConnection(connection);
+            _dbConnection.Close();
 
             return entity;
         }
 
-        protected IDbDataParameter CreateParameterInternal<T>(string name, T value)
+        protected Tuple<string, object> CreateParameterInternal<T>(string name, T value)
         {
-            return _databaseHandler.CreateParameter(name,
+            return Tuple.Create(name,
                 EqualityComparer<T>.Default.Equals(value, default)
                     ? (object)DBNull.Value
                     : value);
+        }
+
+        private IDbCommand CreateCommand(
+            string commandText,
+            CommandType commandType,
+            IEnumerable<Tuple<string, object>> parameters,
+            IDbTransaction transactionScope = null)
+        {
+            var command = _dbConnection.CreateCommand();
+
+            command.CommandText = commandText;
+            command.CommandType = commandType;
+            command.Transaction = transactionScope;
+
+            if (parameters != null)
+            {
+                foreach (var (name, value) in parameters)
+                {
+                    var parameter = command.CreateParameter();
+
+                    parameter.ParameterName = name;
+                    parameter.Value = value;
+
+                    command.Parameters.Add(parameter);
+                }
+            }
+
+            return command;
         }
     }
 }

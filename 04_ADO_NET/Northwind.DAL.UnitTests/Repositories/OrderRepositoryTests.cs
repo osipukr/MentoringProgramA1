@@ -14,13 +14,15 @@ namespace Northwind.DAL.UnitTests.Repositories
     /// Test class for <see cref="OrderRepository"/>.
     /// </summary>
     [TestCaseOrderer(PriorityOrderer.Name, PriorityOrderer.Assembly)]
-    public class OrderRepositoryTests
+    public class OrderRepositoryTests : IClassFixture<SqlDatabaseHandlerStub>
     {
         private readonly IOrderRepository _repository;
 
-        public OrderRepositoryTests()
+        public OrderRepositoryTests(SqlDatabaseHandlerStub databaseHandler)
         {
-            _repository = new OrderRepository(new SqlDatabaseHandlerStub(), new DataMapperStub());
+            var connection = ((IDatabaseHandler)databaseHandler).CreateConnection();
+
+            _repository = new OrderRepository(connection, new DataMapperStub());
         }
 
         [Fact]
