@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using Northwind.DAL.Interfaces;
@@ -21,55 +20,6 @@ namespace Northwind.DAL.Services
         public IDbConnection CreateConnection()
         {
             return new SqlConnection(_connectionString);
-        }
-
-        public IDbCommand CreateCommand(string commandText, CommandType commandType, IDbConnection connection)
-        {
-            if (connection == null)
-            {
-                throw new ArgumentNullException(nameof(connection));
-            }
-
-            if (string.IsNullOrWhiteSpace(commandText))
-            {
-                throw new ArgumentException(string.Empty, nameof(commandText));
-            }
-
-            if (!Enum.IsDefined(typeof(CommandType), commandType))
-            {
-                throw new InvalidEnumArgumentException(nameof(commandType), (int)commandType, typeof(CommandType));
-            }
-
-            var sqlConnection = (SqlConnection)connection;
-
-            return new SqlCommand(commandText, sqlConnection)
-            {
-                CommandType = commandType
-            };
-        }
-
-        public IDbCommand CreateCommand(string commandText, CommandType commandType, IDbConnection connection, IDbTransaction transaction)
-        {
-            var command = CreateCommand(commandText, commandType, connection);
-
-            command.Transaction = transaction;
-
-            return command;
-        }
-
-        public IDbDataParameter CreateParameter(string name, object value)
-        {
-            if (name == null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
-
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            return new SqlParameter(name, value);
         }
 
         public void CloseConnection(IDbConnection connection)
