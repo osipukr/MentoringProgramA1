@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using Northwind.DAL.Abstractions.Interfaces;
 using Northwind.DAL.DatabaseFirst.Entities;
 using Northwind.DAL.DatabaseFirst.Models;

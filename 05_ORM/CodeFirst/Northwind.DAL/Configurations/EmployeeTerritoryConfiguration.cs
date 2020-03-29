@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Northwind.DAL.Entities;
 
-namespace Northwind.EF.DAL.Configuration
+namespace Northwind.DAL.Configurations
 {
     public class EmployeeTerritoryConfiguration : IEntityTypeConfiguration<EmployeeTerritory>
     {
