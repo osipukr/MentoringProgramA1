@@ -1,8 +1,8 @@
-﻿using Northwind.DAL.Abstractions.Interfaces;
+﻿using Northwind.DAL.Abstractions.Entities;
 
 namespace Northwind.DAL.Entities
 {
-    public class EmployeeTerritory : IEntity
+    public class EmployeeTerritory : Entity
     {
         public int EmployeeId { get; set; }
         public string TerritoryId { get; set; }

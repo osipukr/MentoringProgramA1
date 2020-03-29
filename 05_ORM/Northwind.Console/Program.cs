@@ -11,7 +11,7 @@ namespace Northwind.Console
             await new ServiceCollection()
                 .RegisterDependencies()
                 .BuildServiceProvider()
-                .GetService<Application>()
+                .GetRequiredService<Application>()
                 .RunAsync();
         }
     }

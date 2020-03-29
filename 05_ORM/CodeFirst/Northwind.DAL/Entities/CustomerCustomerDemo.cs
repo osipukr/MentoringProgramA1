@@ -1,8 +1,8 @@
-﻿using Northwind.DAL.Abstractions.Interfaces;
+﻿using Northwind.DAL.Abstractions.Entities;
 
 namespace Northwind.DAL.Entities
 {
-    public class CustomerCustomerDemo : IEntity
+    public class CustomerCustomerDemo : Entity
     {
         public string CustomerId { get; set; }
         public string CustomerTypeId { get; set; }

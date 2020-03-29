@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 using Northwind.BL.Interfaces;
 using Northwind.BL.Services;
 using Northwind.Console.Settings;
+using Northwind.DAL.Abstractions.Interfaces;
 using Northwind.DAL.Contexts;
-using Northwind.DAL.Interfaces;
-using Northwind.DAL.Repositories;
+using Northwind.DAL.Services;
 
 namespace Northwind.Console.Extensions
 {
@@ -43,14 +43,13 @@ namespace Northwind.Console.Extensions
 
             #region Code First DI
 
-            services.AddDbContext<DbContext, NorthwindContext>(options =>
+            services.AddDbContext<NorthwindContext>(options =>
             {
-                options.UseSqlServer(appSettings.ConnectionString);
+                options.UseSqlServer(configuration.GetConnectionString("SqlServer"));
                 options.UseLazyLoadingProxies();
             });
 
-            services.AddScoped<IOrderRepository, OrderRepository>();
-            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IUnitOfWork<NorthwindContext>, UnitOfWork>();
             services.AddScoped<IOrderService, OrderService>();
 
             #endregion
@@ -61,7 +60,7 @@ namespace Northwind.Console.Extensions
 
             #endregion
 
-            services.AddScoped<Application>();
+            services.AddSingleton<Application>();
 
             return services;
         }
