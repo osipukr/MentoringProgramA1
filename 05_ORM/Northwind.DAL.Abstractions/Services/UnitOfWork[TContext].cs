@@ -6,21 +6,15 @@ using Northwind.DAL.Abstractions.Interfaces;
 
 namespace Northwind.DAL.Abstractions.Services
 {
-    public abstract class UnitOfWork<TContext> : IUnitOfWork<TContext>, IRepositoryFactory where TContext : DbContext
+    public abstract class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : DbContext
     {
         protected TContext _context;
         protected Dictionary<Type, Type> _repositories;
         protected bool _disposed;
 
-        private UnitOfWork()
+        protected UnitOfWork(TContext context)
         {
-            _repositories = new Dictionary<Type, Type>();
-            _disposed = false;
-        }
-
-        protected UnitOfWork(TContext context) : this()
-        {
-            _context = context;
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         public TContext DbContext => _context;
