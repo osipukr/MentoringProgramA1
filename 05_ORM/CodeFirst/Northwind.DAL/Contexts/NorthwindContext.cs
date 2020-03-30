@@ -5,11 +5,14 @@ namespace Northwind.DAL.Contexts
 {
     public class NorthwindContext : DbContext
     {
+        public NorthwindContext()
+        {
+        }
+
         public NorthwindContext(DbContextOptions<NorthwindContext> options) : base(options)
         {
         }
 
-        public DbSet<CreditCard> CreditCards { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Customer> Customers { get; set; }
         public DbSet<CustomerCustomerDemo> CustomerCustomerDemos { get; set; }
@@ -23,6 +26,7 @@ namespace Northwind.DAL.Contexts
         public DbSet<Shipper> Shippers { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Territory> Territories { get; set; }
+        public DbSet<CreditCard> CreditCards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

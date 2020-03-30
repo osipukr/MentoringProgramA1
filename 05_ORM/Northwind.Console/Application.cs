@@ -35,7 +35,7 @@ namespace Northwind.Console
             }
             catch (NorthwindException exception)
             {
-                _logger.LogWarning(exception.Message);
+                _logger.LogError(exception.Message);
             }
             catch (Exception exception)
             {

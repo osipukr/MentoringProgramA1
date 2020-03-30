@@ -32,11 +32,16 @@ namespace Northwind.DAL.Configurations
             builder.Property(employee => employee.Region).HasColumnName("Region").HasMaxLength(15);
             builder.Property(employee => employee.Title).HasColumnName("Title").HasMaxLength(30);
             builder.Property(employee => employee.TitleOfCourtesy).HasColumnName("TitleOfCourtesy").HasMaxLength(25);
+            builder.Property(employee => employee.CreditCardId).HasColumnName("CreditCardID");
 
             builder.HasOne(employee => employee.ReportsToNavigation)
                 .WithMany(employee => employee.InverseReportsToNavigation)
                 .HasForeignKey(employee => employee.ReportsTo)
                 .HasConstraintName("FK_Employees_Employees");
+
+            builder.HasOne(employee => employee.CreditCard)
+                .WithOne(creditCard => creditCard.Employee)
+                .HasForeignKey<CreditCard>(creditCard => creditCard.EmployeeId);
         }
     }
 }

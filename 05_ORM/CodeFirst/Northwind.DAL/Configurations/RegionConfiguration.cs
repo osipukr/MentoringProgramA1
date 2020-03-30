@@ -8,7 +8,7 @@ namespace Northwind.DAL.Configurations
     {
         public void Configure(EntityTypeBuilder<Region> builder)
         {
-            builder.ToTable("Region");
+            builder.ToTable("Regions");
 
             builder.HasKey(e => e.Id).IsClustered(false);
 

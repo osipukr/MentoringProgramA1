@@ -23,6 +23,7 @@ namespace Northwind.DAL.Entities
         public string Notes { get; set; }
         public int? ReportsTo { get; set; }
         public string PhotoPath { get; set; }
+        public int CreditCardId { get; set; }
 
         public virtual CreditCard CreditCard { get; set; }
         public virtual Employee ReportsToNavigation { get; set; }

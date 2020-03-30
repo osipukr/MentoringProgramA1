@@ -28,6 +28,7 @@ namespace Northwind.DAL.Configurations
             builder.Property(customer => customer.Phone).HasColumnName("Phone").HasMaxLength(24);
             builder.Property(customer => customer.PostalCode).HasColumnName("PostalCode").HasMaxLength(10);
             builder.Property(customer => customer.Region).HasColumnName("Region").HasMaxLength(15);
+            builder.Property(customer => customer.EstablishmentDate).HasColumnName("EstablishmentDate").HasColumnType("datetime");
 
             builder.HasMany(x => x.CustomerCustomerDemo)
                 .WithOne(x => x.Customer)
