@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Northwind.DAL.Abstractions.Repositories;
+using Northwind.DAL.DatabaseFirst.Contexts;
 using Northwind.DAL.DatabaseFirst.Entities;
 using Northwind.DAL.DatabaseFirst.Interfaces;
 using Northwind.DAL.DatabaseFirst.Models;
@@ -9,7 +10,7 @@ namespace Northwind.DAL.DatabaseFirst.Repositories
 {
     public class OrderRepository : Repository<Order>, IOrderRepository
     {
-        public OrderRepository(DbContext context) : base(context)
+        public OrderRepository(NorthwindContext context) : base(context)
         {
         }
 

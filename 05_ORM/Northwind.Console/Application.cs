@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Northwind.BL.Infrastructure.Exceptions;
 using Northwind.BL.Interfaces;
+using Northwind.Console.Extensions;
 using Northwind.Console.Settings;
 using Northwind.Console.ViewModels.Order;
 
@@ -24,7 +24,7 @@ namespace Northwind.Console
             _mapper = mapper;
             _logger = logger;
 
-            ConfiguredApplication(appSettings);
+            appSettings.ConfigureApplication();
         }
 
         public async Task RunAsync()
@@ -45,7 +45,7 @@ namespace Northwind.Console
 
         private async Task RunInternalAsync()
         {
-            var categoryId = 1;
+            const int categoryId = 1;
 
             var orders = await _orderService.GetOrdersWithDetailsAsync(categoryId);
 
@@ -54,12 +54,6 @@ namespace Northwind.Console
             var ordersJson = JsonConvert.SerializeObject(ordersView, Formatting.Indented);
 
             System.Console.WriteLine(ordersJson);
-        }
-
-        private void ConfiguredApplication(AppSettings appSettings)
-        {
-            CultureInfo.CurrentCulture = appSettings.Language;
-            CultureInfo.CurrentUICulture = appSettings.Language;
         }
     }
 }
