@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Northwind.Console": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "NETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
