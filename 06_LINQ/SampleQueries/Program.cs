@@ -6,7 +6,7 @@ namespace SampleQueries
 {
     public static class Program
     {
-        private const string TITLE = "HomeWork - Raman Asipuk";
+        private const string TITLE = "Home Work - Raman Asipuk";
 
         /// <summary>
         /// The main entry point for the application.

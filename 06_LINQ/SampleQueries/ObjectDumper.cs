@@ -12,18 +12,17 @@ namespace SampleQueries
         private int _pos;
         private int _level;
 
+        private ObjectDumper(int depth)
+        {
+            _writer = Console.Out;
+            _depth = depth;
+        }
+
         public static void Write(object o, int depth = 0)
         {
             var dumper = new ObjectDumper(depth);
 
             dumper.WriteObject(null, o);
-        }
-
-
-        private ObjectDumper(int depth)
-        {
-            _writer = Console.Out;
-            _depth = depth;
         }
 
         private void Write(string s)
