@@ -269,14 +269,13 @@ namespace SampleQueries
                                              orderby order.OrderDate
                                              select order.OrderDate).First(),
                                 TotalSum = customer.Orders.Sum(order => order.Total)
-                            };
-
-            customers = from customer in customers
-                        orderby customer.StartDate.Year descending,
+                            }
+                            into customer
+                            orderby customer.StartDate.Year descending,
                                 customer.StartDate.Month descending,
                                 customer.TotalSum descending,
                                 customer.CustomerId descending
-                        select customer;
+                            select customer;
 
             ObjectDumper.Write(customers);
         }
