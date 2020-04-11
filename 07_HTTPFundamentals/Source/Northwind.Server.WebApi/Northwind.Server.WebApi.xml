@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Northwind.Server.WebApi</name>
+    </assembly>
+    <members>
+        <member name="T:Northwind.Server.WebApi.Controllers.OrdersController">
+            <summary>
+            The Order API controller.
+            </summary>
+        </member>
+        <member name="M:Northwind.Server.WebApi.Controllers.OrdersController.Get">
+            <summary>
+            Gets all items.
+            </summary>
+            <returns>Returns all orders.</returns>
+        </member>
+        <member name="M:Northwind.Server.WebApi.Controllers.OrdersController.Get(System.Int32)">
+            <summary>
+            Gets item by order id.
+            </summary>
+            <param name="id">The order id.</param>
+            <returns>Returns found order.</returns>
+        </member>
+        <member name="M:Northwind.Server.WebApi.Controllers.OrdersController.Post(Northwind.Server.WebApi.ViewModels.Order.OrderCreateView)">
+            <summary>
+            Creates new item.
+            </summary>
+            <param name="model">The create model for order.</param>
+            <returns>Returns created order.</returns>
+        </member>
+        <member name="M:Northwind.Server.WebApi.Controllers.OrdersController.Put(System.Int32,Northwind.Server.WebApi.ViewModels.Order.OrderUpdateView)">
+            <summary>
+            Updates item by id.
+            </summary>
+            <param name="id">The order id.</param>
+            <param name="model">Update model for order.</param>
+            <returns>Returns updated order.</returns>
+        </member>
+        <member name="M:Northwind.Server.WebApi.Controllers.OrdersController.Delete(System.Int32)">
+            <summary>
+            Deletes item by id.
+            </summary>
+            <param name="id">The order id.</param>
+        </member>
+    </members>
+</doc>
