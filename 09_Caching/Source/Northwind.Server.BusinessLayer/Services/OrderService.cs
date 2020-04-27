@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EFSecondLevelCache.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Northwind.Server.BusinessLayer.Exceptions;
@@ -41,7 +42,7 @@ namespace Northwind.Server.BusinessLayer.Services
             {
                 _logger.LogInformation($"Method {nameof(ListAsync)} has been invoke.");
 
-                var orders = await _orderRepository.GetAll().OrderBy(order => order.Id).ToListAsync();
+                var orders = await _orderRepository.GetAll().OrderBy(order => order.Id).Cacheable().ToListAsync();
 
                 if (orders == null)
                 {

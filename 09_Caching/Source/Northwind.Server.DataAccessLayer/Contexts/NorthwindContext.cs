@@ -1,4 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using EFSecondLevelCache.Core;
+using EFSecondLevelCache.Core.Contracts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Northwind.Server.DataAccessLayer.Entities;
 
 namespace Northwind.Server.DataAccessLayer.Contexts
@@ -30,6 +35,19 @@ namespace Northwind.Server.DataAccessLayer.Contexts
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.ApplyConfigurationsFromAssembly(typeof(NorthwindContext).Assembly);
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
+        {
+            ChangeTracker.DetectChanges();
+
+            var changedEntityNames = this.GetChangedEntityNames();
+
+            var result = base.SaveChangesAsync(cancellationToken);
+
+            this.GetService<IEFCacheServiceProvider>().InvalidateCacheDependencies(changedEntityNames);
+
+            return result;
         }
     }
 }

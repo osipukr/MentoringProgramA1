@@ -3,6 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using AutoMapper;
+using CacheManager.Core;
+using EFSecondLevelCache.Core;
 using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNet.OData.Formatter;
 using Microsoft.AspNetCore.Builder;
@@ -12,9 +14,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 using Northwind.Server.BusinessLayer.Interfaces;
 using Northwind.Server.BusinessLayer.Services;
 using Northwind.Server.DataAccessLayer.Contexts;
@@ -44,17 +46,13 @@ namespace Northwind.Server.WebApi
                 options.DeveloperMode = _environment.IsDevelopment();
             });
 
-            services.AddLogging(builder =>
-            {
-                builder.AddApplicationInsights();
-            });
-
             services.AddOData();
+            services.AddEFSecondLevelCache();
 
             services
                 .AddDbContext<NorthwindContext>(options =>
                 {
-                    options.UseLazyLoadingProxies();
+                    //options.UseLazyLoadingProxies();
 
                     options.UseSqlServer(
                         _configuration.GetConnectionString("SqlServer"),
@@ -113,6 +111,39 @@ namespace Northwind.Server.WebApi
                     });
                 })
                 .AddSwaggerGenNewtonsoftSupport();
+
+            // Redis configure
+            var redisSection = _configuration.GetSection("ConnectionStrings:AzureRedis");
+
+            // Add Redis cache service provider
+            var jss = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+
+            const string redisConfigurationKey = "redis";
+
+            services.AddSingleton(typeof(ICacheManagerConfiguration),
+                new CacheManager.Core.ConfigurationBuilder()
+                    .WithJsonSerializer(serializationSettings: jss, deserializationSettings: jss)
+                    .WithUpdateMode(CacheUpdateMode.Up)
+                    .WithRedisConfiguration(redisConfigurationKey, config =>
+                    {
+                        config.WithAllowAdmin()
+                            .WithDatabase(0)
+                            .WithEndpoint(redisSection["Host"], redisSection.GetValue<int>("Port"))
+                            .WithPassword(redisSection["Password"])
+                            .WithSsl()
+                            .EnableKeyspaceEvents();
+                    })
+                    .WithMaxRetries(100)
+                    .WithRetryTimeout(50)
+                    .WithRedisCacheHandle(redisConfigurationKey)
+                    .WithExpiration(ExpirationMode.Absolute, TimeSpan.FromMinutes(10))
+                    .Build());
+
+            services.AddSingleton(typeof(ICacheManager<>), typeof(BaseCacheManager<>));
 
             services.AddScoped<IUnitOfWork<NorthwindContext>, NorthwindUnitOfWork>();
             services.AddScoped<IOrderService, OrderService>();
