@@ -21,7 +21,8 @@ using Northwind.Server.DataAccessLayer.Contexts;
 using Northwind.Server.DataAccessLayer.Interfaces.Base;
 using Northwind.Server.DataAccessLayer.Services;
 using Northwind.Server.WebApi.Filters;
-using Northwind.Server.WebApi.OutputFormatters;
+using Northwind.Server.WebApi.Formatters.Input;
+using Northwind.Server.WebApi.Formatters.Output;
 
 namespace Northwind.Server.WebApi
 {
@@ -58,8 +59,8 @@ namespace Northwind.Server.WebApi
                 .AddXmlSerializerFormatters()
                 .AddMvcOptions(options =>
                 {
-                    options.Filters.Add<ControllerExceptionFilterAttribute>();
-                    options.Filters.Add<ModelValidatorFilterAttribute>();
+                    options.Filters.Add<GlobalExceptionFilter>();
+                    options.Filters.Add<ValidatorFilter>();
 
                     // Workaround: https://github.com/OData/WebApi/issues/1177
                     var odataMediaType = new MediaTypeHeaderValue("application/prs.odatatestxx-odata");
@@ -74,7 +75,12 @@ namespace Northwind.Server.WebApi
                         inputFormatter.SupportedMediaTypes.Add(odataMediaType);
                     }
 
+                    // Input formatters
+                    options.InputFormatters.Add(new SoapInputFormatter());
+
+                    // Output formatters
                     options.OutputFormatters.Add(new ExcelOutputFormatter());
+                    options.OutputFormatters.Add(new SoapOutputFormatter());
 
                     options.OutputFormatters.RemoveType<StringOutputFormatter>();
                     options.OutputFormatters.RemoveType<HttpNoContentOutputFormatter>();

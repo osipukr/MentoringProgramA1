@@ -8,7 +8,7 @@ using Microsoft.Net.Http.Headers;
 using Northwind.Server.DataAccessLayer.Entities.Base;
 using Northwind.Server.WebApi.ViewModels;
 
-namespace Northwind.Server.WebApi.OutputFormatters
+namespace Northwind.Server.WebApi.Formatters.Output
 {
     public class ExcelOutputFormatter : OutputFormatter
     {

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Northwind.Server.WebApi
@@ -9,6 +11,13 @@ namespace Northwind.Server.WebApi
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureServices(services =>
+                {
+                    services.Configure<KestrelServerOptions>(options =>
+                    {
+                        options.AllowSynchronousIO = true;
+                    });
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();

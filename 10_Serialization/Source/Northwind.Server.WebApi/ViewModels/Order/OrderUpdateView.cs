@@ -3,41 +3,23 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Northwind.Server.WebApi.ViewModels.Order
 {
-    public class OrderUpdateView
+    [Serializable]
+    public class OrderUpdateView : View
     {
-        [MaxLength(5)]
-        public string CustomerId { get; set; }
+        [MaxLength(5)] public string CustomerId;
+        [Range(1, int.MaxValue)] public int? EmployeeId;
+        [Range(1, int.MaxValue)] public int? ShipVia;
 
-        [Range(1, int.MaxValue)]
-        public int? EmployeeId { get; set; }
+        public DateTime? OrderDate;
+        public DateTime? RequiredDate;
+        public DateTime? ShippedDate;
+        public decimal? Freight;
 
-        public DateTime? OrderDate { get; set; }
-
-        public DateTime? RequiredDate { get; set; }
-
-        public DateTime? ShippedDate { get; set; }
-
-        [Range(1, int.MaxValue)]
-        public int? ShipVia { get; set; }
-
-        public decimal? Freight { get; set; }
-
-        [MaxLength(40)]
-        public string ShipName { get; set; }
-
-        [MaxLength(60)]
-        public string ShipAddress { get; set; }
-
-        [MaxLength(15)]
-        public string ShipCity { get; set; }
-
-        [MaxLength(15)]
-        public string ShipRegion { get; set; }
-
-        [MaxLength(10)]
-        public string ShipPostalCode { get; set; }
-
-        [MaxLength(15)]
-        public string ShipCountry { get; set; }
+        [MaxLength(40)] public string ShipName;
+        [MaxLength(60)] public string ShipAddress;
+        [MaxLength(15)] public string ShipCity;
+        [MaxLength(15)] public string ShipRegion;
+        [MaxLength(10)] public string ShipPostalCode;
+        [MaxLength(15)] public string ShipCountry;
     }
 }

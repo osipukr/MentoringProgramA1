@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -7,7 +6,7 @@ using Northwind.Server.BusinessLayer.Exceptions;
 
 namespace Northwind.Server.WebApi.Filters
 {
-    public class ControllerExceptionFilterAttribute : ExceptionFilterAttribute
+    public class GlobalExceptionFilter : IExceptionFilter
     {
         private readonly Dictionary<ExceptionEventTypes, int> _statusCodesMapper =
             new Dictionary<ExceptionEventTypes, int>
@@ -16,18 +15,9 @@ namespace Northwind.Server.WebApi.Filters
                 [ExceptionEventTypes.NotFound] = StatusCodes.Status404NotFound
             };
 
-        public override void OnException(ExceptionContext context)
+        public void OnException(ExceptionContext context)
         {
             ExceptionHandler(context);
-
-            base.OnException(context);
-        }
-
-        public override Task OnExceptionAsync(ExceptionContext context)
-        {
-            ExceptionHandler(context);
-
-            return base.OnExceptionAsync(context);
         }
 
         private void ExceptionHandler(ExceptionContext context)
